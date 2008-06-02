@@ -500,6 +500,20 @@ You can use it like this:
 Support for hover indications or for associating the clicks with any
 specific data is still forthcoming.
 
+If you need to highlight some specific value on the x- or y-axis, you
+can define markers that will be drawn on the grid.
+
+    markers: [
+      { value: x-or-y-position,
+        width: thickness-of-marker,
+        color: color,
+        axis:  'x' (horizontal) or 'y' (vertical) },
+      ...
+    ]
+
+You can list as many markers as you like, they're drawn on top of the grid
+but under (before) any data series.
+
 
 Customizing the selection
 =========================

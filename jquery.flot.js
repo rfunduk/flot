@@ -67,6 +67,11 @@
                 fillColor: null
             },
             grid: {
+                // marker lines -> should be an array of objects of the form:
+                // [ { axis: 'x', color: '#888888', value: 1, width: 1 }, ... ]
+                // they will only be drawn if they fall within the current
+                // graph scale
+                markers: [],
                 color: "#545454", // primary color used for outline and labels
                 backgroundColor: null, // null for transparent, else color
                 tickColor: "#dddddd", // color used for the ticks
@@ -763,6 +768,7 @@
         
         function draw() {
             drawGrid();
+            drawMarkers();
             for (var i = 0; i < series.length; i++) {
                 drawSeries(series[i]);
             }
@@ -1310,7 +1316,35 @@
             }
             
         }
-        
+
+        function drawMarkers() {
+            if( !options.grid.markers.length ) return;
+
+            for( var i = 0; i < options.grid.markers.length; i++ ) {
+                marker = options.grid.markers[i];
+                if( marker.value < yaxis.max && marker.value > yaxis.min ) {
+                    ctx.lineWidth = marker.width;
+                    ctx.strokeStyle = marker.color;
+                    ctx.beginPath();
+
+                    if( marker.axis == 'x' ) {
+                        ctx.moveTo( tHoz( xaxis.min ) + plotOffset.left,
+                                    tVert( marker.value ) + plotOffset.top );
+                        ctx.lineTo( tHoz( xaxis.max ) + plotOffset.left,
+                                    tVert( marker.value ) + plotOffset.top );
+                    }
+                    else if( marker.axis == 'y' ) {
+                        ctx.moveTo( tHoz( marker.value ) + plotOffset.left,
+                                    tVert( yaxis.min ) + plotOffset.top );
+                        ctx.lineTo( tHoz( marker.value ) + plotOffset.left,
+                                    tVert( yaxis.max ) + plotOffset.top );
+                    }
+
+                    ctx.stroke();
+                }
+            }
+        }
+
         function insertLegend() {
             target.find(".legend").remove();
 
