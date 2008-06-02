@@ -28,7 +28,7 @@ The data is an array of data series:
   [ series1, series2, ... ]
 
 A series can either be raw data or an object with properties. The raw
-data format is an array of points:
+data format is an array of points*:
 
   [ [x1, y1], [x2, y2], ... ]
 
@@ -91,6 +91,11 @@ Here's a complete example of a simple data specification:
   [ { label: "Foo", data: [ [10, 1], [17, -14], [30, 5] ] },
     { label: "Bar", data: [ [11, 13], [19, 11], [30, -7] ] } ]
 
+
+*: If the data series has 'deltas' enabled then you must not only
+   specify the x and y points of the data but also the delta to be used
+   for this data point, eg. [x,y,d] rather than [x,y] (see section
+   below on delta series'.
 
 Plot Options
 ------------
@@ -390,6 +395,13 @@ Customizing the data series
   bars: {
     barWidth: number
   }
+  
+  deltas: {
+    show: boolean
+    lineColor: color (defaults to #333333)
+    markerWidth: number
+    markerColor: color (defaults to lineColor)
+  }
 
   colors: [ color1, color2, ... ]
 
@@ -430,6 +442,13 @@ extra colors by lightening and darkening colors in the theme.
 
 "shadowSize" is the default size of shadows in pixels. Set it to 0 to
 remove shadows.
+
+"deltas" are a lot like enabling bars or showing a marker on the grid except
+that it is a bit more dynamic (giving a somewhat 'boxplot' feel), each data
+point can have a different 'base value' that the actual y-value will be 
+compared against. For example, perhaps you want to show the temperature each
+day and delta the datapoint against the yearly average on that day (or
+against another city, etc).
 
 
 Customizing the grid

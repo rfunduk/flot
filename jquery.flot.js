@@ -66,6 +66,12 @@
                 fill: true,
                 fillColor: null
             },
+            deltas: {
+              show: false,
+              lineColor: "#333333",
+              markerColor: null,
+              markerWidth: null
+            },
             grid: {
                 // marker lines -> should be an array of objects of the form:
                 // [ { axis: 'x', color: '#888888', value: 1, width: 1 }, ... ]
@@ -219,6 +225,7 @@
                 s.lines = $.extend(true, {}, options.lines, s.lines);
                 s.points = $.extend(true, {}, options.points, s.points);
                 s.bars = $.extend(true, {}, options.bars, s.bars);
+                s.deltas = $.extend(true, {}, options.deltas, s.deltas);
                 if (s.shadowSize == null)
                     s.shadowSize = options.shadowSize;
             }
@@ -898,12 +905,14 @@
         }
 
         function drawSeries(series) {
-            if (series.lines.show || (!series.bars.show && !series.points.show))
+            if (series.lines.show || (!series.bars.show && !series.points.show && !series.deltas.show))
                 drawSeriesLines(series);
             if (series.bars.show)
                 drawSeriesBars(series);
             if (series.points.show)
                 drawSeriesPoints(series);
+            if (series.deltas.show)
+                drawSeriesDeltas(series);
         }
         
         function drawSeriesLines(series) {
@@ -1206,6 +1215,113 @@
             ctx.strokeStyle = series.color;
             setFillStyle(series.points, series.color);
             plotPoints(series.data, series.points.radius, series.points.fill);
+            ctx.restore();
+        }
+
+        function drawSeriesDeltas(series) {
+            function plotPoints(data, radius, fill) {
+                for (var i = 0; i < data.length; ++i) {
+                    if (data[i] == null)
+                        continue;
+
+                    var x = data[i][0];
+                    var y = data[i][1]; // the datapoint
+                    var d = data[i][2]; // the delta
+                    if (x < xaxis.min || x > xaxis.max ||
+                        y < yaxis.min || y > yaxis.max ||
+                        d < yaxis.min || d > yaxis.max)
+                        continue;
+
+                    ctx.beginPath();
+                    ctx.arc(tHoz(x), tVert(y), radius, 0, 2 * Math.PI, true);
+                    if (fill)
+                        ctx.fill();
+                    ctx.stroke();
+                }
+            }
+
+            function plotDeltas(data, settings) {
+                for (var i = 0; i < data.length; ++i) {
+                    if (data[i] == null)
+                        continue;
+
+                    var x = data[i][0];
+                    var y = data[i][1]; // the datapoint
+                    var d = data[i][2]; // the delta
+                    if (x < xaxis.min || x > xaxis.max ||
+                        y < yaxis.min || y > yaxis.max ||
+                        d < yaxis.min || d > yaxis.max)
+                        continue;
+
+                    ctx.strokeStyle = settings.lineColor;
+                    ctx.beginPath();
+                    ctx.moveTo(tHoz(x), tVert(y));
+                    ctx.lineTo(tHoz(x), tVert(d));
+                    ctx.stroke();
+
+                    // draw the markers for the deltas (horizontal line)
+                    // but constrain them to the plot area
+                    var markerLeft = tHoz(x) - (ctx.lineWidth*settings.markerWidth);
+                    var markerRight = tHoz(x) + (ctx.lineWidth*settings.markerWidth);
+                    if (markerLeft <= tHoz(xaxis.min))
+                        markerLeft = tHoz(xaxis.min);
+                    if (markerRight >= tHoz(xaxis.max))
+                        markerRight = tHoz(xaxis.max);
+
+                    ctx.strokeStyle = settings.markerColor;
+                    ctx.beginPath();
+                    ctx.moveTo(markerLeft, tVert(d));
+                    ctx.lineTo(markerRight, tVert(d));
+                    ctx.stroke();
+                }
+            }
+
+            function plotPointShadows(data, offset, radius) {
+                for (var i = 0; i < data.length; ++i) {
+                    if (data[i] == null)
+                        continue;
+
+                    var x = data[i][0];
+                    var y = data[i][1]; // the datapoint
+                    var d = data[i][2]; // the delta
+                    if (x < xaxis.min || x > xaxis.max ||
+                        y < yaxis.min || y > yaxis.max ||
+                        d < yaxis.min || d > yaxis.max)
+                        continue;
+                    ctx.beginPath();
+                    ctx.arc(tHoz(x), tVert(y) + offset, radius, 0, Math.PI, false);
+                    ctx.stroke();
+                }
+            }
+
+            ctx.save();
+            ctx.translate(plotOffset.left, plotOffset.top);
+
+            var lw = series.lines.lineWidth;
+            var sw = series.shadowSize;
+            if (sw > 0) {
+                // draw shadow in two steps
+                ctx.lineWidth = sw / 2;
+                ctx.strokeStyle = "rgba(0,0,0,0.1)";
+                plotPointShadows(series.data, sw/2 + ctx.lineWidth/2, series.points.radius);
+
+                ctx.lineWidth = sw / 2;
+                ctx.strokeStyle = "rgba(0,0,0,0.2)";
+                plotPointShadows(series.data, ctx.lineWidth/2, series.points.radius);
+            }
+
+            ctx.lineWidth = series.points.lineWidth;
+
+            // draw the delta lines and markers
+            if (!series.deltas.markerColor)
+                series.deltas.markerColor = series.deltas.lineColor;
+            plotDeltas(series.data, series.deltas);
+
+            // draw the actual datapoints
+            ctx.strokeStyle = series.color;
+            setFillStyle(series.points, series.color);
+            plotPoints(series.data, series.points.radius, series.points.fill);
+
             ctx.restore();
         }
 
