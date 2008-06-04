@@ -27,6 +27,7 @@
                 backgroundOpacity: 0.85 // set to 0 to avoid background
             },
             xaxis: {
+                show: true,
                 mode: null, // null or "time"
                 min: null, // min. value to show, null means set automatically
                 max: null, // max. value to show, null means set automatically
@@ -44,6 +45,7 @@
                 timeformat: null // format string to use
             },
             yaxis: {
+                show: true,
                 autoscaleMargin: 0.02
             },
             points: {
@@ -77,6 +79,7 @@
                 // [ { axis: 'x', color: '#888888', value: 1, width: 1 }, ... ]
                 // they will only be drawn if they fall within the current
                 // graph scale
+                show: true,
                 markers: [],
                 color: "#545454", // primary color used for outline and labels
                 backgroundColor: null, // null for transparent, else color
@@ -736,7 +739,7 @@
 
             plotOffset.left = plotOffset.right = plotOffset.top = plotOffset.bottom = maxOutset;
 
-            if (yaxis.labelWidth > 0)
+            if (yaxis.labelWidth > 0 && options.xaxis.show)
                 plotOffset.left += yaxis.labelWidth + options.grid.labelMargin;
             plotWidth = canvasWidth - plotOffset.left - plotOffset.right;
 
@@ -765,7 +768,7 @@
                 }
             }
                 
-            if (xaxis.labelHeight > 0)
+            if (xaxis.labelHeight > 0 && options.yaxis.show)
                 plotOffset.bottom += xaxis.labelHeight + options.grid.labelMargin;
             
             plotHeight = canvasHeight - plotOffset.bottom - plotOffset.top;
@@ -791,6 +794,8 @@
 
         function drawGrid() {
             var i;
+            
+            if (!options.grid.show) return;
             
             ctx.save();
             ctx.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -884,19 +889,23 @@
             var html = '<div class="tickLabels" style="font-size:smaller;color:' + options.grid.color + '">';
             
             // do the x-axis
-            for (i = 0; i < xaxis.ticks.length; ++i) {
-                tick = xaxis.ticks[i];
-                if (!tick.label || tick.v < xaxis.min || tick.v > xaxis.max)
-                    continue;
-                html += '<div style="position:absolute;top:' + (plotOffset.top + plotHeight + options.grid.labelMargin) + 'px;left:' + (plotOffset.left + tHoz(tick.v) - xaxis.labelWidth/2) + 'px;width:' + xaxis.labelWidth + 'px;text-align:center" class="tickLabel">' + tick.label + "</div>";
+            if (options.xaxis.show) {
+                for (i = 0; i < xaxis.ticks.length; ++i) {
+                    tick = xaxis.ticks[i];
+                    if (!tick.label || tick.v < xaxis.min || tick.v > xaxis.max)
+                        continue;
+                    html += '<div style="position:absolute;top:' + (plotOffset.top + plotHeight + options.grid.labelMargin) + 'px;left:' + (plotOffset.left + tHoz(tick.v) - xaxis.labelWidth/2) + 'px;width:' + xaxis.labelWidth + 'px;text-align:center" class="tickLabel">' + tick.label + "</div>";
+                }
             }
             
             // do the y-axis
-            for (i = 0; i < yaxis.ticks.length; ++i) {
-                tick = yaxis.ticks[i];
-                if (!tick.label || tick.v < yaxis.min || tick.v > yaxis.max)
-                    continue;
-                html += '<div style="position:absolute;top:' + (plotOffset.top + tVert(tick.v) - yaxis.labelHeight/2) + 'px;left:0;width:' + yaxis.labelWidth + 'px;text-align:right" class="tickLabel">' + tick.label + "</div>";
+            if (options.yaxis.show) {
+                for (i = 0; i < yaxis.ticks.length; ++i) {
+                    tick = yaxis.ticks[i];
+                    if (!tick.label || tick.v < yaxis.min || tick.v > yaxis.max)
+                        continue;
+                    html += '<div style="position:absolute;top:' + (plotOffset.top + tVert(tick.v) - yaxis.labelHeight/2) + 'px;left:0;width:' + yaxis.labelWidth + 'px;text-align:right" class="tickLabel">' + tick.label + "</div>";
+                }
             }
 
             html += '</div>';

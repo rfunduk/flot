@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+ <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Flot Examples</title>
+    <link href="layout.css" rel="stylesheet" type="text/css"></link>
+    <!--[if IE]><script language="javascript" type="text/javascript" src="../excanvas.pack.js"></script><![endif]-->
+    <script language="javascript" type="text/javascript" src="../jquery.js"></script>
+    <script language="javascript" type="text/javascript" src="../jquery.flot.js"></script>
+ </head>
+    <body>
+    <h1>Flot Examples</h1>
+
+    <div id="placeholder" style="padding-right: 10px;float:left;width:100px;height:25px;"></div>
+
+    <p style="width:275px;">
+      You can make a little graph (showing a trend, for example)
+      easily by disabling the axes and grid drawing. This can be handy
+      in tables or just as a visual cue when you don't need the graph
+      to be precisely readable. This is also similar in a way to 
+      '<a title="Seems that Edward Tufte popularized the idea." href="https://www.edwardtufte.com/bboard/q-and-a-fetch-msg?msg_id=0001OR&topic_id=1">sparklines</a>'
+      but not as <a href="http://ejohn.org/projects/jspark/" title="John Resig's JavaScript Sparklines">lightweight</a>.
+    </p>
+
+<script id="source" language="javascript" type="text/javascript">
+$(function () {
+    var data = [ {
+      data: [[1,5], [2,6], [3,3], [4,3], [5,9], [6,1], [7,6]],
+      color: "#34E"
+    } ];
+
+    var options = {
+      points: { show: true },
+      lines:  { show: true },
+      xaxis:  { show: false },
+      yaxis:  { show: false },
+      grid:   { show: false }
+    };
+
+    $.plot($("#placeholder"), data, options);
+});
+</script>
+
+ </body>
+</html>
