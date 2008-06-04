@@ -1505,7 +1505,7 @@
                     if (p.charAt(1) == "e")
                         pos += 'right:' + (m + plotOffset.right) + 'px;';
                     else if (p.charAt(1) == "w")
-                        pos += 'left:' + (m + plotOffset.bottom) + 'px;';
+                        pos += 'left:' + (m + plotOffset.left) + 'px;';
                     var legend = $('<div class="legend">' + table.replace('style="', 'style="position:absolute;' + pos +';') + '</div>').appendTo(target);
                     if (options.legend.backgroundOpacity != 0.0) {
                         // put in the transparent background
