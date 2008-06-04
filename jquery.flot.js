@@ -69,10 +69,9 @@
                 fillColor: null
             },
             deltas: {
-              show: false,
-              lineColor: "#333333",
-              markerColor: null,
-              markerWidth: null
+                show: false,
+                color: { above: '#A00', below: '#00A', equal: '#D52' },
+                markerWidth: 3
             },
             grid: {
                 // marker lines -> should be an array of objects of the form:
@@ -741,7 +740,7 @@
 
             if (yaxis.labelWidth > 0 && options.xaxis.show)
                 plotOffset.left += yaxis.labelWidth + options.grid.labelMargin;
-            plotWidth = canvasWidth - plotOffset.left - plotOffset.right;
+            plotWidth = canvasWidth - plotOffset.left - plotOffset.right - 10;
 
             // set width for labels; to avoid measuring the widths of
             // the labels, we construct fixed-size boxes and put the
@@ -1262,7 +1261,10 @@
                         d < yaxis.min || d > yaxis.max)
                         continue;
 
-                    ctx.strokeStyle = settings.lineColor;
+                    if (y < d)       ctx.strokeStyle = settings.color.below;
+                    else if (y > d)  ctx.strokeStyle = settings.color.above;
+                    else             ctx.strokeStyle = settings.color.equal;
+
                     ctx.beginPath();
                     ctx.moveTo(tHoz(x), tVert(y));
                     ctx.lineTo(tHoz(x), tVert(d));
@@ -1272,12 +1274,11 @@
                     // but constrain them to the plot area
                     var markerLeft = tHoz(x) - (ctx.lineWidth*settings.markerWidth);
                     var markerRight = tHoz(x) + (ctx.lineWidth*settings.markerWidth);
-                    if (markerLeft <= tHoz(xaxis.min))
-                        markerLeft = tHoz(xaxis.min);
-                    if (markerRight >= tHoz(xaxis.max))
-                        markerRight = tHoz(xaxis.max);
+                    //if (markerLeft <= tHoz(xaxis.min))
+                    //    markerLeft = tHoz(xaxis.min);
+                    //if (markerRight >= tHoz(xaxis.max))
+                    //    markerRight = tHoz(xaxis.max);
 
-                    ctx.strokeStyle = settings.markerColor;
                     ctx.beginPath();
                     ctx.moveTo(markerLeft, tVert(d));
                     ctx.lineTo(markerRight, tVert(d));
@@ -1322,8 +1323,6 @@
             ctx.lineWidth = series.points.lineWidth;
 
             // draw the delta lines and markers
-            if (!series.deltas.markerColor)
-                series.deltas.markerColor = series.deltas.lineColor;
             plotDeltas(series.data, series.deltas);
 
             // draw the actual datapoints
