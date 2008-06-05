@@ -86,6 +86,8 @@
                 labelMargin: 3, // in pixels
                 borderWidth: 2,
                 clickable: null,
+                triggerOnMouseOver: false,
+                mouseCatchingArea: 15,
                 coloredAreas: null, // array of { x1, y1, x2, y2 } or fn: plot area -> areas
                 coloredAreasColor: "#f4f4f4"
             },
@@ -302,7 +304,7 @@
 
             
             // bind events
-            if (options.selection.mode != null) {
+            if (options.selection.mode != null || options.grid.triggerOnMouseOver) {
                 eventHolder.mousedown(onMouseDown);
                 
                 // FIXME: temp. work-around until jQuery bug 1871 is fixed
@@ -1542,6 +1544,43 @@
         var selectionInterval = null;
         var ignoreClick = false;
         
+        // Returns the data item the mouse is over, or null if none is found
+        function findSelectedItem(mouseX, mouseY) {
+            // How close do we need to be to an item in order to select it?
+            // The clickCatchingArea parameter is the radius of the circle, in pixels.
+            lowestDistance = options.grid.mouseCatchingArea * options.grid.mouseCatchingArea;
+            selectedItem = null;
+
+            for (var i = 0; i < series.length; ++i) {
+                var data = series[i].data;
+
+                for (var j = 0; j < data.length; ++j) {
+                    if (data[j] == null) continue;
+
+                    // We have to calculate distances in pixels, not in data units, because
+                    // the scale of the axes may be different
+                    var x = data[j][0], y = data[j][1];
+
+                    xDistance = Math.abs(tHoz(x)-mouseX);
+                    if (xDistance > options.grid.mouseCatchingArea) continue;
+
+                    yDistance = Math.abs(tVert(y)-mouseY);
+                    if (yDistance > options.grid.mouseCatchingArea) continue;
+
+                    sqrDistance = xDistance*xDistance + yDistance*yDistance;
+                    if (sqrDistance < lowestDistance) {
+                        selectedItem = {
+                            x: x, y: y,
+                            label: series[i].label
+                        };
+                        lowestDistance = sqrDistance;
+                    }
+                }
+            }
+
+            return selectedItem;
+        }
+        
         function onMouseMove(ev) {
             // FIXME: temp. work-around until jQuery bug 1871 is fixed
             var e = ev || window.event;
@@ -1553,6 +1592,15 @@
             else {
                 lastMousePos.pageX = e.pageX;
                 lastMousePos.pageY = e.pageY;
+            }
+            
+            if ( options.grid.triggerOnMouseOver ) {
+                var offset = eventHolder.offset();
+                pos = {};
+                pos.x = lastMousePos.pageX - offset.left - plotOffset.left;
+                pos.y = lastMousePos.pageY - offset.top - plotOffset.top;
+                pos.selectedItem = findSelectedItem(pos.x, pos.y)
+                target.trigger("plotmousemove", [ pos ]);
             }
         }
         
@@ -1590,10 +1638,11 @@
             
             var offset = eventHolder.offset();
             var pos = {};
-            pos.x = e.pageX - offset.left - plotOffset.left;
-            pos.x = xaxis.min + pos.x / hozScale;
-            pos.y = e.pageY - offset.top - plotOffset.top;
-            pos.y = yaxis.max - pos.y / vertScale;
+            var canvasX = e.pageX - offset.left - plotOffset.left;
+            pos.x = xaxis.min + canvasX / hozScale;
+            var canvasY = e.pageY - offset.top - plotOffset.top;
+            pos.y = yaxis.max - canvasY / vertScale;
+            pos.selectedItem = findSelectedItem(canvasX, canvasY);
 
             target.trigger("plotclick", [ pos ]);
         }
