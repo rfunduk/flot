@@ -44,7 +44,7 @@ $(function () {
     });
 
     $("#placeholder").bind("plotmousemove", function (e, pos) {
-        if (!pos.selected) return;
+        if (!pos.selected) { plot.draw(); return; }
         plot.highlightSelected( pos.selected );
         x = pos.selected.x.toFixed(2);
         y = pos.selected.y.toFixed(2);
