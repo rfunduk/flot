@@ -1,5 +1,32 @@
-Flot x.x
+Flot 0.5
 --------
+
+Fixed a bug where negative bars wouldn't get drawn if they were
+below the min-y.
+
+Moved the right border of the graph in 10px from the right side of
+the containing div so that points don't get chopped in half when
+drawn there.
+
+Added a 'deltas' graph type which takes 3 values rather than 2 and draws
+a 'delta' line from the y to the extra value.
+
+Added the ability to remove the grid and axis labels (for showing
+inline graphs or similar).
+
+Fixed a bug where the legend, when placed on the right side of the graph,
+wasn't indented the proper amount (it was using the bottom offset rather
+than the left offset).
+
+Added the ability to draw markers on the graph at arbitrary x or y
+values without additional datasets.
+
+Added functionality for graph hovering and clicking. Hovering over the
+graph and determining the hovered point is quite processor intensive
+so if hovering is enabled the data will be sorted upon graph generation
+and then only a subset of points are scanned when hovering. This is still
+pretty slow especially in internet explorer. The sorting can be disabled
+entirely with options.sortData = false, if desired.
 
 API changes: timestamps in time mode are now displayed according to
 UTC instead of the time zone of the visitor. This affects the way the

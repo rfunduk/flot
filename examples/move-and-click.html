@@ -28,32 +28,27 @@ $(function () {
     plot = $.plot($("#placeholder"), [ d1, d2 ], { 
         points: { show: true }, 
         lines: { show: true },
-        grid: { clickable: true, triggerOnMouseOver: true }
+        grid: { 
+          clickable: true,
+          triggerOnMouseOver: true,
+          mouseOverHighlight: "black"
+        }
     });
 
     $("#placeholder").bind("plotclick", function (e, pos) {
-        // the values are in pos.x and pos.y
-        x = pos.selectedItem.x;
-        y = pos.selectedItem.y;
-        $("#result").text('You clicked on (' + x.toFixed(2) +  ', ' + y.toFixed(2) + ')');
+        plot.highlightSelected( pos.selected );
+        x = pos.selected.x.toFixed(2);
+        y = pos.selected.y.toFixed(2);
+        $("#result").text('You clicked on (' + x +  ', ' + y + ')');
     });
 
-    lastSelectedItem = null;
     $("#placeholder").bind("plotmousemove", function (e, pos) {
-      if ( pos.selectedItem ) {
-        if (pos.selectedItem==lastSelectedItem) return;
-        x = pos.selectedItem.x;
-        y = pos.selectedItem.y;
-        $("#result").text('You hovered over (' + x.toFixed(2) +  ', ' + y.toFixed(2) + ')');
-        plot.setData( [d1, d2, [[x,y]]] );
-        plot.draw();
-        lastSelectedItem = pos.selectedItem;
-      }
-      else {
-        plot.setData( [d1,d2] );
-        plot.draw();
-        lastSelectedItem = null;
-      }
+        if (pos.selected) {
+            plot.highlightSelected( pos.selected );
+            x = pos.selected.x.toFixed(2);
+            y = pos.selected.y.toFixed(2);
+            $("#result").text('You hovered over (' + x +  ', ' + y + ')');
+        }
     });
 });
 </script>

@@ -506,21 +506,60 @@ An example function might look like this:
 
 If you set "clickable" to true, the plot will listen for click events
 on the plot area and fire a "plotclick" event on the placeholder with
-an object { x: number, y: number } as parameter when one occurs. The
-returned coordinates will be in the unit of the plot (not in pixels).
-You can use it like this:
+an object { x: number, y: number } as parameter when one occurs. You can
+use it like this:
 
-    $.plot($("#placeholder"), [ d ], { grid: { clickable: true } });
+    plot = $.plot($("#placeholder"), [ d ], { grid: { clickable: true } });
 
-    $("#placeholder").bind("plotclick", function (e, pos) {
-        // the values are in pos.x and pos.y
+    $("#placeholder").bind("plotclick", function (e, result) {
+        // result.selected.x and result.selected.y are the datapoint matched
+        // and the raw click locations are in result.raw.x/y
     });
 
-Support for hover indications or for associating the clicks with any
-specific data is still forthcoming.
+If you set 'hoverable' to true, the plot will fire a hover event more or
+less continuously while your mouse travels. You can use it like this:
 
-If you need to highlight some specific value on the x- or y-axis, you
-can define markers that will be drawn on the grid.
+    plot = $.plot($('#placeholder'), [d], { grid: { hoverable: true } } );
+    $('#placeholder').bind('plotmouseover', function(e, result) {
+        // result.selected contains the matched point and result.raw
+        // contains the raw mouse co-ordinates, like plotclick
+    } );
+    
+Both of these handlers can benefit from the new function 'highlightSelected'
+which take a datapoint of the form { x: xval, y: yval } and draws 'fake'
+points on the graph at that location. To do this you must specify some options
+for how you want it displayed, eg:
+
+    options.grid.mouseOverHighlight = "black";
+    options.grid.mouseOverFill = "red";
+    
+    // and then call
+    plot.highlightSelected( result.selected );
+    
+... will cause highlighted points (when hovering or clicking) to be drawn
+with black borders and a red center. If you specify a mouseOverHighlight
+but not mouseOverFill, the fill will default to white (just like regular
+points on the graph). Note that this also means that you could pass
+result.raw instead to draw a point 'in the middle of nowhere', or any other
+coordinates:
+
+    plot.highlightSelected({ x: result.selected.x, y: result.selected.y + 1 });
+
+Keep in mind one major limitation of the hovering system. It can be _very_
+slow with lots of data. To curb this problem, upon the initial generation
+of a graph the library will now sort the data, but only if hovering is enabled.
+If your data is already sorted (and you're sure) then you can change this
+behavior with options.sortData = false. Once the data is sorted we can do
+some simple math to limit our traversal of the data series, making the hovering
+calculations faster at the expense of 'loading time' (the sorting isn't too
+large of a hit, it seems).
+
+The matching area is currently set to 15px, this should be an acceptable
+default. If you need to change it you can override this setting with
+options.grid.mouseCatchingArea = pixels.
+
+If you need to mark some specific value on the x- or y-axis, you can define
+markers that will be drawn on the grid.
 
     markers: [
       { value: x-or-y-position,
@@ -551,9 +590,9 @@ When selection support is enabled, a "selected" event will be emitted
 on the DOM element you passed into the plot function. The event
 handler gets one extra parameter with the area selected, like this:
 
-  placeholder.bind("selected", function(event, area) {
-    // area selected is area.x1 to area.x2 and area.y1 to area.y2
-  });
+    placeholder.bind("selected", function(event, area) {
+        // area selected is area.x1 to area.x2 and area.y1 to area.y2
+    });
 
 
 Plot Members

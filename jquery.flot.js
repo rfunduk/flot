@@ -1,7 +1,7 @@
-/* Javascript plotting library for jQuery, v. 0.4.
+/*
+ * Flot v0.5.0
  *
- * Released under the MIT license by iola, December 2007.
- *
+ * Released under the MIT license.
  */
 
 (function($) {
@@ -86,7 +86,9 @@
                 labelMargin: 3, // in pixels
                 borderWidth: 2,
                 clickable: null,
-                triggerOnMouseOver: false,
+                hoverable: false,
+                mouseOverHighlight: null,
+                mouseOverFill: '#FFF',
                 mouseCatchingArea: 15,
                 coloredAreas: null, // array of { x1, y1, x2, y2 } or fn: plot area -> areas
                 coloredAreasColor: "#f4f4f4"
@@ -95,7 +97,8 @@
                 mode: null, // one of null, "x", "y" or "xy"
                 color: "#e8cfac"
             },
-            shadowSize: 4
+            shadowSize: 4,
+            sortData: true
         };
         var canvas = null, overlay = null, eventHolder = null, 
             ctx = null, octx = null,
@@ -105,11 +108,13 @@
             canvasWidth = 0, canvasHeight = 0,
             plotWidth = 0, plotHeight = 0,
             hozScale = 0, vertScale = 0,
+            lastMarker = null,
             // dedicated to storing data for buggy standard compliance cases
             workarounds = {};
         
         this.setData = setData;
         this.setupGrid = setupGrid;
+        this.highlightSelected = highlightSelected;
         this.draw = draw;
         this.clearSelection = clearSelection;
         this.setSelection = setSelection;
@@ -134,20 +139,29 @@
         }
         
         function parseData(d) {
+            // normalize the data given by the call to $.plot. If we're
+            // going to be monitoring mousemove's then sort the data
+            function sortData(x, y) {
+                if (x[0] > y[0]) return 1;
+                else if( x[0] < y[0]) return -1;
+                else return 0;
+            }
+
             var res = [];
             for (var i = 0; i < d.length; ++i) {
                 var s;
                 if (d[i].data) {
+                    if (options.sortData && options.grid.hoverable) { d[i].data.sort(sortData); }
                     s = {};
                     for (var v in d[i])
                         s[v] = d[i][v];
                 }
                 else {
+                    if (options.sortData && options.grid.hoverable) { d[i].sort(sortData); }
                     s = { data: d[i] };
                 }
                 res.push(s);
             }
-
             return res;
         }
         
@@ -304,7 +318,7 @@
 
             
             // bind events
-            if (options.selection.mode != null || options.grid.triggerOnMouseOver) {
+            if (options.selection.mode != null || options.grid.hoverable) {
                 eventHolder.mousedown(onMouseDown);
                 
                 // FIXME: temp. work-around until jQuery bug 1871 is fixed
@@ -1554,7 +1568,17 @@
             for (var i = 0; i < series.length; ++i) {
                 var data = series[i].data;
 
-                for (var j = 0; j < data.length; ++j) {
+                var half = tHoz(data[(data.length/2).toFixed(0)][0]).toFixed(0);
+                if (mouseX < half) {
+                    start = 0;
+                    end = (data.length/2).toFixed(0) + 5;
+                }
+                else {
+                    start = (data.length/2).toFixed(0) - 5;
+                    end = data.length;
+                }
+
+                for (var j = start; j < end; ++j) {
                     if (data[j] == null) continue;
 
                     // We have to calculate distances in pixels, not in data units, because
@@ -1571,7 +1595,7 @@
                     if (sqrDistance < lowestDistance) {
                         selectedItem = {
                             x: x, y: y,
-                            label: series[i].label
+                            data: series[i]
                         };
                         lowestDistance = sqrDistance;
                     }
@@ -1594,13 +1618,14 @@
                 lastMousePos.pageY = e.pageY;
             }
             
-            if ( options.grid.triggerOnMouseOver ) {
+            if ( options.grid.hoverable ) {
                 var offset = eventHolder.offset();
-                pos = {};
-                pos.x = lastMousePos.pageX - offset.left - plotOffset.left;
-                pos.y = lastMousePos.pageY - offset.top - plotOffset.top;
-                pos.selectedItem = findSelectedItem(pos.x, pos.y)
-                target.trigger("plotmousemove", [ pos ]);
+                result = { raw: { 
+                    x: lastMousePos.pageX - offset.left - plotOffset.left,
+                    y: lastMousePos.pageY - offset.top - plotOffset.top
+                } };
+                result.selected = findSelectedItem(result.raw.x, result.raw.y)
+                target.trigger("plotmousemove", [ result ]);
             }
         }
         
@@ -1637,14 +1662,16 @@
             }
             
             var offset = eventHolder.offset();
-            var pos = {};
             var canvasX = e.pageX - offset.left - plotOffset.left;
-            pos.x = xaxis.min + canvasX / hozScale;
             var canvasY = e.pageY - offset.top - plotOffset.top;
-            pos.y = yaxis.max - canvasY / vertScale;
-            pos.selectedItem = findSelectedItem(canvasX, canvasY);
 
-            target.trigger("plotclick", [ pos ]);
+            var result = { raw: {
+                x: xaxis.min + canvasX / hozScale,
+                y: yaxis.max - canvasY / vertScale
+            } };
+            result.selected = findSelectedItem(canvasX, canvasY);
+
+            target.trigger("plotclick", [ result ]);
         }
         
         function triggerSelectedEvent() {
@@ -1774,7 +1801,33 @@
             drawSelection();
             triggerSelectedEvent();
         }
-        
+       
+        function highlightSelected(marker) {
+            // prevent unnecessary work
+            if (marker == lastMarker) return;
+            else lastMarker = marker;
+
+            // draw a marker on the graph over the point that the mouse is hovering over
+            if (marker && options.grid.mouseOverHighlight) {
+                var fill = options.grid.mouseOverHighlight == 'transparent' ?
+                             'transparent' :
+                             options.grid.mouseOverFill;
+                             
+                var temp_series = {
+                    shadowSize: options.shadowSize,
+                    lines: { show: false },
+                    points: $.extend(true, options.points, { fillColor: fill }),
+                    color: options.grid.mouseOverHighlight,
+                    data: [[marker.x, marker.y]]
+                };
+                draw();
+                drawSeriesPoints(temp_series);
+            }
+            else {
+                draw();
+            }
+        }
+ 
         function drawSelection() {
             if (prevSelection != null &&
                 selection.first.x == prevSelection.first.x &&
