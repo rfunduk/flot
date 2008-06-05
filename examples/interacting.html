@@ -30,12 +30,13 @@ $(function () {
         lines: { show: true },
         grid: { 
           clickable: true,
-          triggerOnMouseOver: true,
+          hoverable: true,
           mouseOverHighlight: "black"
         }
     });
 
     $("#placeholder").bind("plotclick", function (e, pos) {
+        if (!pos.selected) return;
         plot.highlightSelected( pos.selected );
         x = pos.selected.x.toFixed(2);
         y = pos.selected.y.toFixed(2);
@@ -43,12 +44,11 @@ $(function () {
     });
 
     $("#placeholder").bind("plotmousemove", function (e, pos) {
-        if (pos.selected) {
-            plot.highlightSelected( pos.selected );
-            x = pos.selected.x.toFixed(2);
-            y = pos.selected.y.toFixed(2);
-            $("#result").text('You hovered over (' + x +  ', ' + y + ')');
-        }
+        if (!pos.selected) return;
+        plot.highlightSelected( pos.selected );
+        x = pos.selected.x.toFixed(2);
+        y = pos.selected.y.toFixed(2);
+        $("#result").text('You hovered over (' + x +  ', ' + y + ')');
     });
 });
 </script>
