@@ -78,11 +78,12 @@
                 // [ { axis: 'x', color: '#888888', value: 1, width: 1 }, ... ]
                 // they will only be drawn if they fall within the current
                 // graph scale
-                show: true,
+                show: 'both',
                 markers: [],
                 color: "#545454", // primary color used for outline and labels
                 backgroundColor: null, // null for transparent, else color
                 tickColor: "#dddddd", // color used for the ticks
+                tickWidth: 1, // thickness of grid lines
                 labelMargin: 3, // in pixels
                 borderWidth: 2,
                 clickable: null,
@@ -810,7 +811,7 @@
         function drawGrid() {
             var i;
             
-            if (!options.grid.show) return;
+            if (options.grid.show == 'none') return;
             
             ctx.save();
             ctx.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -864,27 +865,32 @@
             }
             
             // draw the inner grid
-            ctx.lineWidth = 1;
+            ctx.lineWidth = options.grid.tickWidth;
             ctx.strokeStyle = options.grid.tickColor;
             ctx.beginPath();
             var v;
-            for (i = 0; i < xaxis.ticks.length; ++i) {
-                v = xaxis.ticks[i].v;
-                if (v <= xaxis.min || v >= xaxis.max)
-                    continue;   // skip those lying on the axes
+            if (options.grid.show == 'x' || options.grid.show == 'both') {
+                for (i = 0; i < xaxis.ticks.length; ++i) {
+                    v = xaxis.ticks[i].v;
+                     if (v <= xaxis.min || v >= xaxis.max)
+                         continue;   // skip those lying on the axes
 
-                ctx.moveTo(Math.floor(tHoz(v)) + ctx.lineWidth/2, 0);
-                ctx.lineTo(Math.floor(tHoz(v)) + ctx.lineWidth/2, plotHeight);
+                     ctx.moveTo(Math.floor(tHoz(v)) + ctx.lineWidth/2, 0);
+                     ctx.lineTo(Math.floor(tHoz(v)) + ctx.lineWidth/2, plotHeight);
+                }
             }
 
-            for (i = 0; i < yaxis.ticks.length; ++i) {
-                v = yaxis.ticks[i].v;
-                if (v <= yaxis.min || v >= yaxis.max)
-                    continue;
+            if (options.grid.show == 'y' || options.grid.show == 'both') {
+                for (i = 0; i < yaxis.ticks.length; ++i) {
+                    v = yaxis.ticks[i].v;
+                    if (v <= yaxis.min || v >= yaxis.max)
+                        continue;
 
-                ctx.moveTo(0, Math.floor(tVert(v)) + ctx.lineWidth/2);
-                ctx.lineTo(plotWidth, Math.floor(tVert(v)) + ctx.lineWidth/2);
+                    ctx.moveTo(0, Math.floor(tVert(v)) + ctx.lineWidth/2);
+                    ctx.lineTo(plotWidth, Math.floor(tVert(v)) + ctx.lineWidth/2);
+                }
             }
+
             ctx.stroke();
             
             if (options.grid.borderWidth) {
