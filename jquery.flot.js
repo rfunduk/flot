@@ -27,7 +27,7 @@
                 backgroundOpacity: 0.85 // set to 0 to avoid background
             },
             xaxis: {
-                show: true,
+                showLabels: true,
                 mode: null, // null or "time"
                 min: null, // min. value to show, null means set automatically
                 max: null, // max. value to show, null means set automatically
@@ -45,7 +45,7 @@
                 timeformat: null // format string to use
             },
             yaxis: {
-                show: true,
+                showLabels: true,
                 autoscaleMargin: 0.02
             },
             points: {
@@ -78,7 +78,8 @@
                 // [ { axis: 'x', color: '#888888', value: 1, width: 1 }, ... ]
                 // they will only be drawn if they fall within the current
                 // graph scale
-                show: 'both',
+                showLines: 'both',
+                showBorder: true,
                 markers: [],
                 color: "#545454", // primary color used for outline and labels
                 backgroundColor: null, // null for transparent, else color
@@ -755,7 +756,7 @@
 
             plotOffset.left = plotOffset.right = plotOffset.top = plotOffset.bottom = maxOutset;
 
-            if (yaxis.labelWidth > 0 && options.xaxis.show)
+            if (yaxis.labelWidth > 0 && options.xaxis.showLabels)
                 plotOffset.left += yaxis.labelWidth + options.grid.labelMargin;
             plotWidth = canvasWidth - plotOffset.left - plotOffset.right - 10;
 
@@ -784,7 +785,7 @@
                 }
             }
                 
-            if (xaxis.labelHeight > 0 && options.yaxis.show)
+            if (xaxis.labelHeight > 0 && options.yaxis.showLabels)
                 plotOffset.bottom += xaxis.labelHeight + options.grid.labelMargin;
             
             plotHeight = canvasHeight - plotOffset.bottom - plotOffset.top;
@@ -810,9 +811,7 @@
 
         function drawGrid() {
             var i;
-            
-            if (options.grid.show == 'none') return;
-            
+
             ctx.save();
             ctx.clearRect(0, 0, canvasWidth, canvasHeight);
             ctx.translate(plotOffset.left, plotOffset.top);
@@ -869,7 +868,7 @@
             ctx.strokeStyle = options.grid.tickColor;
             ctx.beginPath();
             var v;
-            if (options.grid.show == 'x' || options.grid.show == 'both') {
+            if (options.grid.showLines == 'x' || options.grid.showLines == 'both') {
                 for (i = 0; i < xaxis.ticks.length; ++i) {
                     v = xaxis.ticks[i].v;
                      if (v <= xaxis.min || v >= xaxis.max)
@@ -880,7 +879,7 @@
                 }
             }
 
-            if (options.grid.show == 'y' || options.grid.show == 'both') {
+            if (options.grid.showLines == 'y' || options.grid.showLines == 'both') {
                 for (i = 0; i < yaxis.ticks.length; ++i) {
                     v = yaxis.ticks[i].v;
                     if (v <= yaxis.min || v >= yaxis.max)
@@ -893,7 +892,7 @@
 
             ctx.stroke();
             
-            if (options.grid.borderWidth) {
+            if (options.grid.showBorder && options.grid.borderWidth) {
                 // draw border
                 ctx.lineWidth = options.grid.borderWidth;
                 ctx.strokeStyle = options.grid.color;
@@ -910,7 +909,7 @@
             var html = '<div class="tickLabels" style="font-size:smaller;color:' + options.grid.color + '">';
             
             // do the x-axis
-            if (options.xaxis.show) {
+            if (options.xaxis.showLabels) {
                 for (i = 0; i < xaxis.ticks.length; ++i) {
                     tick = xaxis.ticks[i];
                     if (!tick.label || tick.v < xaxis.min || tick.v > xaxis.max)
@@ -920,7 +919,7 @@
             }
             
             // do the y-axis
-            if (options.yaxis.show) {
+            if (options.yaxis.showLabels) {
                 for (i = 0; i < yaxis.ticks.length; ++i) {
                     tick = yaxis.ticks[i];
                     if (!tick.label || tick.v < yaxis.min || tick.v > yaxis.max)
