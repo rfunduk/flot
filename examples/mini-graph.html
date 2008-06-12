@@ -32,9 +32,9 @@ $(function () {
     var options = {
       points: { show: true },
       lines:  { show: true },
-      xaxis:  { show: false },
-      yaxis:  { show: false },
-      grid:   { show: false }
+      xaxis:  { showLabels: false },
+      yaxis:  { showLabels: false },
+      grid:   { showLines: false, showBorder: false }
     };
 
     $.plot($("#placeholder"), data, options);
