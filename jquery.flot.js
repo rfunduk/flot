@@ -4,6 +4,7 @@
  * Released under the MIT license.
  */
 RIGHT_SIDE_BUFFER = 10;
+BOTTOM_SIDE_BUFFER = 5;
 
 (function($) {
     function Plot(target_, data_, options_) {
@@ -789,7 +790,7 @@ RIGHT_SIDE_BUFFER = 10;
             if (xaxis.labelHeight > 0 && options.yaxis.showLabels)
                 plotOffset.bottom += xaxis.labelHeight + options.grid.labelMargin;
             
-            plotHeight = canvasHeight - plotOffset.bottom - plotOffset.top;
+            plotHeight = canvasHeight - plotOffset.bottom - BOTTOM_SIDE_BUFFER - plotOffset.top;
             hozScale = plotWidth / (xaxis.max - xaxis.min);
             vertScale = plotHeight / (yaxis.max - yaxis.min);
         }
@@ -1531,7 +1532,7 @@ RIGHT_SIDE_BUFFER = 10;
                     if (p.charAt(0) == "n")
                         pos += 'top:' + (m + plotOffset.top) + 'px;';
                     else if (p.charAt(0) == "s")
-                        pos += 'bottom:' + (m + plotOffset.bottom) + 'px;';
+                        pos += 'bottom:' + (m + plotOffset.bottom + BOTTOM_SIDE_BUFFER) + 'px;';
                     if (p.charAt(1) == "e")
                         pos += 'right:' + (m + plotOffset.right + RIGHT_SIDE_BUFFER) + 'px;';
                     else if (p.charAt(1) == "w")
