@@ -3,6 +3,7 @@
  *
  * Released under the MIT license.
  */
+RIGHT_SIDE_BUFFER = 10;
 
 (function($) {
     function Plot(target_, data_, options_) {
@@ -758,7 +759,7 @@
 
             if (yaxis.labelWidth > 0 && options.xaxis.showLabels)
                 plotOffset.left += yaxis.labelWidth + options.grid.labelMargin;
-            plotWidth = canvasWidth - plotOffset.left - plotOffset.right - 10;
+            plotWidth = canvasWidth - plotOffset.left - plotOffset.right - RIGHT_SIDE_BUFFER;
 
             // set width for labels; to avoid measuring the widths of
             // the labels, we construct fixed-size boxes and put the
@@ -1532,7 +1533,7 @@
                     else if (p.charAt(0) == "s")
                         pos += 'bottom:' + (m + plotOffset.bottom) + 'px;';
                     if (p.charAt(1) == "e")
-                        pos += 'right:' + (m + plotOffset.right) + 'px;';
+                        pos += 'right:' + (m + plotOffset.right + RIGHT_SIDE_BUFFER) + 'px;';
                     else if (p.charAt(1) == "w")
                         pos += 'left:' + (m + plotOffset.left) + 'px;';
                     var legend = $('<div class="legend">' + table.replace('style="', 'style="position:absolute;' + pos +';') + '</div>').appendTo(target);
