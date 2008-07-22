@@ -40,7 +40,8 @@ $(function () {
         
     var d6 = [];
     for (var i = 0; i < 14; i += 0.5)
-        d6.push([i, Math.sin(i)+5, (i%2+6)]);
+        d6.push([i, Math.round(Math.sin(i)+5.5), (i%2+6)]);
+    d6.push([14,6,2]);
     
     $.plot($("#placeholder"), [
         {
@@ -66,7 +67,15 @@ $(function () {
         },
         {
             data: d6,
-            deltas: { show: true, markerWidth: 3, lineColor: "#888" }
+            deltas: {
+              show: true,
+              markerWidth: 4,
+              color: {
+                above: "red",
+                below: "transparent",
+                equal: "blue"
+              }
+            }
         }
     ]);
 });
