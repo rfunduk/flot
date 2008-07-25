@@ -322,7 +322,7 @@ BOTTOM_SIDE_BUFFER = 5;
 
             
             // bind events
-            if (options.selection.mode != null || options.grid.hoverable) {
+            if (options.selection.mode != null) {
                 eventHolder.mousedown(onMouseDown);
                 
                 // FIXME: temp. work-around until jQuery bug 1871 is fixed
@@ -331,8 +331,15 @@ BOTTOM_SIDE_BUFFER = 5;
                 });
             }
 
-            if (options.grid.clickable)
+            if (options.grid.hoverable) {
+                eventHolder.each(function () {
+                    this.onmousemove = onMouseMove;
+                });
+            }
+
+            if (options.grid.clickable) {
                 eventHolder.click(onClick);
+            }
         }
 
         function setupGrid() {
@@ -1654,9 +1661,7 @@ BOTTOM_SIDE_BUFFER = 5;
             }
             
             setSelectionPos(selection.first, e);
-                
-            if (selectionInterval != null)
-                clearInterval(selectionInterval);
+            clearInterval(selectionInterval);
             lastMousePos.pageX = null;
             selectionInterval = setInterval(updateSelectionOnMouseMove, 200);
             $(document).one("mouseup", onSelectionMouseUp);
@@ -1747,10 +1752,7 @@ BOTTOM_SIDE_BUFFER = 5;
             }
 
             if (options.selection.mode == "x") {
-                if (pos == selection.first)
-                    pos.y = 0;
-                else
-                    pos.y = plotHeight;
+                pos.y = (pos == selection.first) ? 0 : plotHeight;
             }
             else {
                 pos.y = e.pageY - offset.top - plotOffset.top;
@@ -1759,18 +1761,15 @@ BOTTOM_SIDE_BUFFER = 5;
         }
         
         function updateSelectionOnMouseMove() {
-            if (lastMousePos.pageX == null)
-                return;
+            if (lastMousePos.pageX == null) { return; }
             
             setSelectionPos(selection.second, lastMousePos);
             clearSelection();
-            if (selectionIsSane())
-                drawSelection();
+            if (selectionIsSane()) { drawSelection(); }
         }
 
         function clearSelection() {
-            if (prevSelection == null)
-                return;
+            if (prevSelection == null) { return; }
 
             var x = Math.min(prevSelection.first.x, prevSelection.second.x),
                 y = Math.min(prevSelection.first.y, prevSelection.second.y),
@@ -1796,6 +1795,7 @@ BOTTOM_SIDE_BUFFER = 5;
                 selection.first.y = (yaxis.max - area.y1) * vertScale;
                 selection.second.y = (yaxis.max - area.y2) * vertScale;
             }
+            
             if (options.selection.mode == "y") {
                 selection.first.x = 0;
                 selection.second.x = plotWidth;
@@ -1811,8 +1811,8 @@ BOTTOM_SIDE_BUFFER = 5;
        
         function highlightSelected(marker) {
             // prevent unnecessary work
-            if (marker == lastMarker) return;
-            else lastMarker = marker;
+            if (marker == lastMarker) { return; }
+            else { lastMarker = marker; }
 
             // draw a marker on the graph over the point that the mouse is hovering over
             if (marker && options.grid.mouseOverHighlight) {
@@ -1848,6 +1848,8 @@ BOTTOM_SIDE_BUFFER = 5;
             ctx.lineJoin = "round";
             octx.fillStyle = parseColor(options.selection.color).scale(null, null, null, 0.4).toString();
 
+            //prevSelection = { first:  selection.first,
+            //                  second: selection.second } };
             prevSelection = { first:  { x: selection.first.x,
                                         y: selection.first.y },
                               second: { x: selection.second.x,
@@ -1865,13 +1867,13 @@ BOTTOM_SIDE_BUFFER = 5;
         function selectionIsSane() {
             var minSize = 5;
             return Math.abs(selection.second.x - selection.first.x) >= minSize &&
-                Math.abs(selection.second.y - selection.first.y) >= minSize;
+                   Math.abs(selection.second.y - selection.first.y) >= minSize;
         }
     }
     
     $.plot = function(target, data, options) {
         var plot = new Plot(target, data, options);
-        /*var t0 = new Date();     
+        /*var t0 = new Date();
         var t1 = new Date();
         var tstr = "time used (msecs): " + (t1.getTime() - t0.getTime())
         if (window.console)
@@ -1889,7 +1891,6 @@ BOTTOM_SIDE_BUFFER = 5;
     // color helpers, inspiration from the jquery color animation
     // plugin by John Resig
     function Color (r, g, b, a) {
-       
         var rgba = ['r','g','b','a'];
         var x = 4; //rgba.length
        
@@ -1943,49 +1944,49 @@ BOTTOM_SIDE_BUFFER = 5;
     }
     
     var lookupColors = {
-        aqua:[0,255,255],
-        azure:[240,255,255],
-        beige:[245,245,220],
-        black:[0,0,0],
-        blue:[0,0,255],
-        brown:[165,42,42],
-        cyan:[0,255,255],
-        darkblue:[0,0,139],
-        darkcyan:[0,139,139],
-        darkgrey:[169,169,169],
-        darkgreen:[0,100,0],
-        darkkhaki:[189,183,107],
-        darkmagenta:[139,0,139],
-        darkolivegreen:[85,107,47],
-        darkorange:[255,140,0],
-        darkorchid:[153,50,204],
-        darkred:[139,0,0],
-        darksalmon:[233,150,122],
-        darkviolet:[148,0,211],
-        fuchsia:[255,0,255],
-        gold:[255,215,0],
-        green:[0,128,0],
-        indigo:[75,0,130],
-        khaki:[240,230,140],
-        lightblue:[173,216,230],
-        lightcyan:[224,255,255],
-        lightgreen:[144,238,144],
-        lightgrey:[211,211,211],
-        lightpink:[255,182,193],
-        lightyellow:[255,255,224],
-        lime:[0,255,0],
-        magenta:[255,0,255],
-        maroon:[128,0,0],
-        navy:[0,0,128],
-        olive:[128,128,0],
-        orange:[255,165,0],
-        pink:[255,192,203],
-        purple:[128,0,128],
-        violet:[128,0,128],
-        red:[255,0,0],
-        silver:[192,192,192],
-        white:[255,255,255],
-        yellow:[255,255,0]
+        aqua:           [0,255,255],
+        azure:          [240,255,255],
+        beige:          [245,245,220],
+        black:          [0,0,0],
+        blue:           [0,0,255],
+        brown:          [165,42,42],
+        cyan:           [0,255,255],
+        darkblue:       [0,0,139],
+        darkcyan:       [0,139,139],
+        darkgrey:       [169,169,169],
+        darkgreen:      [0,100,0],
+        darkkhaki:      [189,183,107],
+        darkmagenta:    [139,0,139],
+        darkolivegreen: [85,107,47],
+        darkorange:     [255,140,0],
+        darkorchid:     [153,50,204],
+        darkred:        [139,0,0],
+        darksalmon:     [233,150,122],
+        darkviolet:     [148,0,211],
+        fuchsia:        [255,0,255],
+        gold:           [255,215,0],
+        green:          [0,128,0],
+        indigo:         [75,0,130],
+        khaki:          [240,230,140],
+        lightblue:      [173,216,230],
+        lightcyan:      [224,255,255],
+        lightgreen:     [144,238,144],
+        lightgrey:      [211,211,211],
+        lightpink:      [255,182,193],
+        lightyellow:    [255,255,224],
+        lime:           [0,255,0],
+        magenta:        [255,0,255],
+        maroon:         [128,0,0],
+        navy:           [0,0,128],
+        olive:          [128,128,0],
+        orange:         [255,165,0],
+        pink:           [255,192,203],
+        purple:         [128,0,128],
+        violet:         [128,0,128],
+        red:            [255,0,0],
+        silver:         [192,192,192],
+        white:          [255,255,255],
+        yellow:         [255,255,0]
     };    
 
     function extractColor(element) {
@@ -2009,7 +2010,16 @@ BOTTOM_SIDE_BUFFER = 5;
     // parse string, returns Color
     function parseColor(str) {
         var result;
-
+        
+        // Try to lookup the color first before going mad with regexes
+        var name = $.trim(str).toLowerCase();
+        if (name == "transparent")
+            return new Color(255, 255, 255, 0);
+        else if (!name.match(/^(rgb|#)/)) {
+            result = lookupColors[name];
+            return new Color(result[0], result[1], result[2]);
+        }
+        
         // Look for rgb(num,num,num)
         if (result = /rgb\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*\)/.exec(str))
             return new Color(parseInt(result[1], 10), parseInt(result[2], 10), parseInt(result[3], 10));
@@ -2033,15 +2043,6 @@ BOTTOM_SIDE_BUFFER = 5;
         // Look for #fff
         if (result = /#([a-fA-F0-9])([a-fA-F0-9])([a-fA-F0-9])/.exec(str))
             return new Color(parseInt(result[1]+result[1], 16), parseInt(result[2]+result[2], 16), parseInt(result[3]+result[3], 16));
-
-        // Otherwise, we're most likely dealing with a named color
-        var name = $.trim(str).toLowerCase();
-        if (name == "transparent")
-            return new Color(255, 255, 255, 0);
-        else {
-            result = lookupColors[name];
-            return new Color(result[0], result[1], result[2]);
-        }
     }
         
 })(jQuery);
