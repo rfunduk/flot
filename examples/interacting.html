@@ -26,6 +26,7 @@ $(function () {
         d2.push([i, Math.cos(i)]);
 
     plot = $.plot($("#placeholder"), [ d1, d2 ], { 
+        hints: { show: true },
         points: { show: true }, 
         lines: { show: true },
         grid: { 
@@ -36,7 +37,7 @@ $(function () {
     });
 
     $("#placeholder").bind("plotclick", function (e, pos) {
-        if (!pos.selected) return;
+        if (!pos.selected) { return; }
         plot.highlightSelected( pos.selected );
         x = pos.selected.x.toFixed(2);
         y = pos.selected.y.toFixed(2);
@@ -44,7 +45,7 @@ $(function () {
     });
 
     $("#placeholder").bind("plotmousemove", function (e, pos) {
-        if (!pos.selected) { plot.draw(); return; }
+        if (!pos.selected) { return; }
         plot.highlightSelected( pos.selected );
         x = pos.selected.x.toFixed(2);
         y = pos.selected.y.toFixed(2);

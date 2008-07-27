@@ -97,6 +97,15 @@ BOTTOM_SIDE_BUFFER = 5;
                 coloredAreas: null, // array of { x1, y1, x2, y2 } or fn: plot area -> areas
                 coloredAreasColor: "#f4f4f4"
             },
+            hints: {
+                show: false,
+                showColorBox: true,
+                showSeriesLabel: true,
+                labelFormatter: defaultLabelFormatter,
+                hintFormatter: defaultHintFormatter,
+                backgroundColor: null, // null means auto-detect
+                backgroundOpacity: 0.95 // set to 0 to avoid background
+            },
             selection: {
                 mode: null, // one of null, "x", "y" or "xy"
                 color: "#e8cfac"
@@ -104,6 +113,15 @@ BOTTOM_SIDE_BUFFER = 5;
             shadowSize: 4,
             sortData: true
         };
+        
+        function defaultHintFormatter(x, y) {
+            return "x: " + x + " y: " + y;
+        }
+        
+        function defaultLabelFormatter(x) {
+            return ":: " + x + " ::";
+        }
+
         var canvas = null, overlay = null, eventHolder = null, 
             ctx = null, octx = null,
             target = target_,
@@ -112,6 +130,7 @@ BOTTOM_SIDE_BUFFER = 5;
             canvasWidth = 0, canvasHeight = 0,
             plotWidth = 0, plotHeight = 0,
             hozScale = 0, vertScale = 0,
+            hintDiv = null, hintBackground = null,
             lastMarker = null,
             // dedicated to storing data for buggy standard compliance cases
             workarounds = {};
@@ -120,12 +139,15 @@ BOTTOM_SIDE_BUFFER = 5;
         this.setupGrid = setupGrid;
         this.highlightSelected = highlightSelected;
         this.draw = draw;
+        this.cleanup = cleanup;
         this.clearSelection = clearSelection;
         this.setSelection = setSelection;
         this.getCanvas = function() { return canvas; };
         this.getPlotOffset = function() { return plotOffset; };
         this.getData = function() { return series; };
         this.getAxes = function() { return { xaxis: xaxis, yaxis: yaxis }; };
+        this.hintDiv = function() { return hintDiv; }
+        this.hintBackground = function(){ return hintBackground; }
         
         // initialize
         parseOptions(options_);
@@ -133,7 +155,6 @@ BOTTOM_SIDE_BUFFER = 5;
         constructCanvas();
         setupGrid();
         draw();
-
 
         function setData(d) {
             series = parseData(d);
@@ -155,14 +176,19 @@ BOTTOM_SIDE_BUFFER = 5;
             for (var i = 0; i < d.length; ++i) {
                 var s;
                 if (d[i].data) {
-                    if (options.sortData && options.grid.hoverable) { d[i].data.sort(sortData); }
                     s = {};
-                    for (var v in d[i])
+                    if (options.sortData && options.grid.hoverable) {
+                        d[i].data.sort(sortData);
+                    }
+                    for (var v in d[i]) {
                         s[v] = d[i][v];
+                    }
                 }
                 else {
-                    if (options.sortData && options.grid.hoverable) { d[i].sort(sortData); }
                     s = { data: d[i] };
+                    if (options.sortData && options.grid.hoverable) {
+                        d[i].sort(sortData);
+                    }
                 }
                 res.push(s);
             }
@@ -244,12 +270,12 @@ BOTTOM_SIDE_BUFFER = 5;
                     s.color = colors[s.color].toString();
 
                 // copy the rest
-                s.lines = $.extend(true, {}, options.lines, s.lines);
+                s.lines =  $.extend(true, {}, options.lines,  s.lines);
                 s.points = $.extend(true, {}, options.points, s.points);
-                s.bars = $.extend(true, {}, options.bars, s.bars);
+                s.bars =   $.extend(true, {}, options.bars,   s.bars);
                 s.deltas = $.extend(true, {}, options.deltas, s.deltas);
-                if (s.shadowSize == null)
-                    s.shadowSize = options.shadowSize;
+                s.hints =  $.extend(true, {}, options.hints,  s.hints);
+                if (s.shadowSize == null) s.shadowSize = options.shadowSize;
             }
         }
         
@@ -1551,11 +1577,7 @@ BOTTOM_SIDE_BUFFER = 5;
                         // label boxes
                         var c = options.legend.backgroundColor;
                         if (c == null) {
-                            var tmp;
-                            if (options.grid.backgroundColor)
-                                tmp = options.grid.backgroundColor;
-                            else
-                                tmp = extractColor(legend);
+                            tmp = options.grid.backgroundColor ? options.grid.backgroundColor : extractColor(legend);
                             c = parseColor(tmp).adjust(null, null, null, 1).toString();
                         }
                         var div = legend.children();
@@ -1638,7 +1660,16 @@ BOTTOM_SIDE_BUFFER = 5;
                     x: lastMousePos.pageX - offset.left - plotOffset.left,
                     y: lastMousePos.pageY - offset.top - plotOffset.top
                 } };
-                result.selected = findSelectedItem(result.raw.x, result.raw.y)
+                result.selected = findSelectedItem(result.raw.x, result.raw.y);
+                
+                // display the tooltip/hint if requested
+                if (result.selected && result.selected.data.hints.show) {
+                    showHintDiv(result.selected.x,
+                                result.selected.y,
+                                result.selected.data);
+                }
+                
+                if (!result.selected) cleanup();
                 target.trigger("plotmousemove", [ result ]);
             }
         }
@@ -1868,6 +1899,59 @@ BOTTOM_SIDE_BUFFER = 5;
             var minSize = 5;
             return Math.abs(selection.second.x - selection.first.x) >= minSize &&
                    Math.abs(selection.second.y - selection.first.y) >= minSize;
+        }
+        
+        function showHintDiv(x, y, data) {
+            var offset = $(overlay).offset();
+            var fragments = [];
+            var hintWrapper = $('<div class="hint-wrapper"></div>');
+            var table = $('<table style="font-size:smaller;white-space: nowrap;color:' + options.grid.color + '">' + fragments.join() + '</table>');
+            hintWrapper.appendTo(target);
+            
+            fragments.push('<tbody>');
+            fragments.push('<tr>');
+            
+            if (data.hints.showColorBox) {
+                fragments.push('<td class="legendColorBox"><div style="border:1px solid ' +
+                               options.legend.labelBoxBorderColor +
+                               ';padding:1px"><div style="width:14px;height:10px;background-color:' +
+                               data.color + '"></div></div></td>');
+            }
+            
+            if (data.hints.showSeriesLabel && data.label) {
+                var label = data.hints.labelFormatter(data.label);
+                fragments.push('<td class="legendLabel" style="padding-left:4px">' + label + '</td>');
+            }
+            fragments.push('<td class="hintData" style="padding-left:4px"></td>');
+            fragments.push('</tr>');
+            fragments.push('</tbody>');
+            
+            hintDiv = $('<div class="plot-hint" style="z-index:4;position:absolute;top:0px;left:0px;display:none;"></div>').appendTo(hintWrapper);
+            hintDiv.append(table);
+            if (data.hints.backgroundOpacity != 0.0) {
+                var c = data.hints.backgroundColor;
+                if (c == null) {
+                    tmp = options.grid.backgroundColor ? options.grid.backgroundColor : extractColor(hintDiv);
+                    c = parseColor(tmp).adjust(null, null, null, 1).toString();
+                }
+                hintBackground = $('<div class="hint-background" style="z-index:4;position:absolute;display:none;background-color:' + c + ';"> </div>').appendTo(hintWrapper).css('opacity', data.hints.backgroundOpacity);
+            }
+            
+            var hintDataContainer = hintDiv.find('.hintData');
+            $(hintDataContainer).text(data.hints.hintFormatter( x, y ));
+
+            hintDiv.css({ left: lastMousePos.pageX - offset.left + 15,
+                          top: lastMousePos.pageY - offset.top + 15 }).show();
+
+            hintBackground.css({ left: lastMousePos.pageX - offset.left + 15,
+                                 top: lastMousePos.pageY - offset.top + 15,
+                                 width: hintDiv.width(),
+                                 height: hintDiv.height() }).show();
+        }
+        
+        function cleanup() {
+            $('.hint-wrapper').remove();
+            draw();
         }
     }
     
