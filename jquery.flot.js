@@ -103,8 +103,9 @@ BOTTOM_SIDE_BUFFER = 5;
                 showSeriesLabel: true,
                 labelFormatter: defaultLabelFormatter,
                 hintFormatter: defaultHintFormatter,
-                backgroundColor: "black", // null means auto-detect
-                backgroundOpacity: 0.1 // set to 0 to avoid background
+                backgroundColor: "#DDD", // null means auto-detect
+                backgroundOpacity: 0.7, // set to 0 to avoid background
+                borderColor: "#BBB" // set to 'transparent' for none
             },
             selection: {
                 mode: null, // one of null, "x", "y" or "xy"
@@ -138,8 +139,6 @@ BOTTOM_SIDE_BUFFER = 5;
         this.getPlotOffset = function() { return plotOffset; };
         this.getData = function() { return series; };
         this.getAxes = function() { return { xaxis: xaxis, yaxis: yaxis }; };
-        this.hintDiv = function() { return hintDiv; }
-        this.hintBackground = function(){ return hintBackground; }
         
         // initialize
         parseOptions(options_);
@@ -149,7 +148,7 @@ BOTTOM_SIDE_BUFFER = 5;
         draw();
         // kill hints and highlighted points when the mouse leaves the graph
         if (options.grid.hoverable) { $(target).mouseout(cleanup); }
-        
+
         function setData(d) {
             series = parseData(d);
 
@@ -1657,7 +1656,7 @@ BOTTOM_SIDE_BUFFER = 5;
                 result.selected = findSelectedItem(result.raw.x, result.raw.y);
                 
                 // display the tooltip/hint if requested
-                if (result.selected && result.selected.data.hints.show) {
+                if (!$.browser.msie && result.selected && result.selected.data.hints.show) {
                     showHintDiv(result.selected.x,
                                 result.selected.y,
                                 result.selected.data);
@@ -1920,13 +1919,14 @@ BOTTOM_SIDE_BUFFER = 5;
             
                 if (data.hints.showSeriesLabel && data.label) {
                     var label = data.hints.labelFormatter(data.label);
-                    fragments.push('<td class="legendLabel" style="padding-left:4px">' + label + '</td>');
+                    fragments.push('<td class="legendLabel" style="padding: 0px 4px">' + label + '</td>');
                 }
-                fragments.push('<td class="hintData" style="padding-left:4px"></td>');
+                fragments.push('<td class="hintData" style="padding-left: 4px;"></td>');
                 fragments.push('</tr>');
                 fragments.push('</tbody>');
-            
-                hintDiv = $('<div class="plot-hint" style="z-index:5;position:absolute;top:0px;left:0px;display:none;"></div>').appendTo(hintWrapper);
+                
+                hintDiv = $('<div class="plot-hint" style="border: 1px solid ' + options.hints.borderColor +
+                            ';padding: 1px;z-index:5;position:absolute;top:1px;left:1px;display:none;"></div>').appendTo(hintWrapper);
                 var table = $('<table style="font-size:smaller;white-space: nowrap;color:' +
                               options.grid.color + '">' + fragments.join('') + '</table>');
                 hintDiv.append(table);
@@ -1936,17 +1936,20 @@ BOTTOM_SIDE_BUFFER = 5;
                         tmp = options.grid.backgroundColor ? options.grid.backgroundColor : extractColor(hintDiv);
                         c = parseColor(tmp).adjust(null, null, null, 1).toString();
                     }
-                    hintBackground = $('<div class="hint-background" style="z-index:4;position:absolute;display:none;background-color:' + c + ';"> </div>').appendTo(hintWrapper).css('opacity', data.hints.backgroundOpacity);
+                    hintBackground = $('<div class="hint-background" style="padding: 2px;z-index:4;position:absolute;display:none;background-color:' + c + ';"> </div>').appendTo(hintWrapper).css('opacity', data.hints.backgroundOpacity);
                 }
             
                 var hintDataContainer = hintDiv.find('.hintData');
                 $(hintDataContainer).html(data.hints.hintFormatter( x, y ));
             }
 
-            hintDiv.css({ left: lastMousePos.pageX - offset.left + 15,
+            leftEdge = lastMousePos.pageX - offset.left + 15;
+            if (hintDiv.width() + leftEdge > target.width()) {
+                leftEdge = leftEdge - 30 - hintDiv.width();
+            }
+            hintDiv.css({ left: leftEdge,
                           top: lastMousePos.pageY - offset.top + 15 }).show();
-
-            hintBackground.css({ left: lastMousePos.pageX - offset.left + 15,
+            hintBackground.css({ left: leftEdge,
                                  top: lastMousePos.pageY - offset.top + 15,
                                  width: hintDiv.width(),
                                  height: hintDiv.height() }).show();
@@ -1959,7 +1962,7 @@ BOTTOM_SIDE_BUFFER = 5;
         
         function defaultHintFormatter(x, y) {
             return "<strong>x:</strong> " + x.toFixed(2) +
-                   " <strong>y:</strong> " + y.toFixed(2);
+                   "<br/><strong>y:</strong> " + y.toFixed(2);
         }
         
         function defaultLabelFormatter(label) {
