@@ -1,3 +1,6 @@
+*** Giving up updating this changelog in favor of just following the 
+    commits on github. This file will be removed in the future.
+
 Flot 0.5
 --------
 

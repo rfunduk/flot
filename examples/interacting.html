@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Flot Examples</title>
     <link href="interacting_files/layout.css" rel="stylesheet" type="text/css">
-    <!--[if IE]><script language="javascript" type="text/javascript" src="excanvas.pack.js"></script><![endif]-->
+    <!--[if IE]><script language="javascript" type="text/javascript" src="../excanvas.pack.js"></script><![endif]-->
     <script language="javascript" type="text/javascript" src="../jquery.js"></script>
     <script language="javascript" type="text/javascript" src="../jquery.flot.js"></script>
  </head><body>
@@ -25,10 +25,12 @@ $(function () {
     for (var i = 0; i < 14; i += 0.5)
         d2.push([i, Math.cos(i)]);
 
-    plot = $.plot($("#placeholder"), [ { data:d1, label: "test"}, d2 ], { 
+    plot = $.plot($("#placeholder"), [ { data: d1, label: "Yellow" },
+                                       { data: d2, label: "Blue" } ], { 
         hints: { show: true },
         points: { show: true }, 
         lines: { show: true },
+        legend: { position: 'sw' },
         grid: { 
           clickable: true,
           hoverable: true,
@@ -47,9 +49,6 @@ $(function () {
     $("#placeholder").bind("plotmousemove", function (e, pos) {
         if (!pos.selected) { return; }
         plot.highlightSelected( pos.selected );
-        x = pos.selected.x.toFixed(2);
-        y = pos.selected.y.toFixed(2);
-        $("#result").text('You hovered over (' + x +  ', ' + y + ')');
     });
 });
 </script>

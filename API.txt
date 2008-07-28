@@ -57,6 +57,7 @@ The format of a single series object is as follows:
     lines: specific lines options,
     bars: specific bars options,
     points: specific points options,
+    hints: specific hints options,
     shadowSize: number
   }
 
@@ -402,6 +403,15 @@ Customizing the data series
     markerWidth: number
     markerColor: color (defaults to lineColor)
   }
+  
+  hints: {
+    showColorBox: boolean
+    showSeriesLabel: boolean
+    labelFormatter: fn: or leave it alone to get the defalt
+    hintFormatter: fn: or leave it alone to get the defalt
+    backgroundColor: color or null (for auto-detect)
+    backgroundOpacity: number
+  }
 
   colors: [ color1, color2, ... ]
 
@@ -449,6 +459,25 @@ point can have a different 'base value' that the actual y-value will be
 compared against. For example, perhaps you want to show the temperature each
 day and delta the datapoint against the yearly average on that day (or
 against another city, etc).
+
+"hints" are essentially tooltips that get formatted according to the format
+function assigned to either an individual series or to all hints. The function
+should return a string. Here are the default formatters:
+
+     function defaultHintFormatter(x, y) {
+         return "<strong>x:</strong> " + x.toFixed(2) +
+                " <strong>y:</strong> " + y.toFixed(2);
+     }
+     
+     function defaultLabelFormatter(label) {
+         return "<span style='font-size:1.2em;'>" + label + "</span>";
+     }
+     
+'defaultHintFormatter' is the formatter for the actual datapoint.
+'defaultLabelFormatter' is the formatter for the series label. 'showColorBox'
+is whether the color of the series will appear in the tooltip like it does
+in the legend. 'showSeriesLabel' is whether the label of the series is inserted
+into the hint at all.
 
 
 Customizing the grid

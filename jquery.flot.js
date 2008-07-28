@@ -103,8 +103,8 @@ BOTTOM_SIDE_BUFFER = 5;
                 showSeriesLabel: true,
                 labelFormatter: defaultLabelFormatter,
                 hintFormatter: defaultHintFormatter,
-                backgroundColor: null, // null means auto-detect
-                backgroundOpacity: 0.95 // set to 0 to avoid background
+                backgroundColor: "black", // null means auto-detect
+                backgroundOpacity: 0.1 // set to 0 to avoid background
             },
             selection: {
                 mode: null, // one of null, "x", "y" or "xy"

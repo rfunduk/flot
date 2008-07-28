@@ -21,7 +21,8 @@ you take the one bundled with Flot as it contains a bugfix for drawing
 filled shapes) which is canvas emulation on Internet Explorer. You can
 include the excanvas script like this:
 
-  <!--[if IE]><script language="javascript" type="text/javascript" src="excanvas.pack.js"></script><![endif]-->
+  <!--[if IE]><script language="javascript" type="text/javascript"
+                      src="excanvas.pack.js"></script><![endif]-->
 
 If it's not working on your development IE 6.0, check that it has
 support for VML which excanvas is relying on. It appears that some
