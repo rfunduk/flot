@@ -114,14 +114,6 @@ BOTTOM_SIDE_BUFFER = 5;
             sortData: true
         };
         
-        function defaultHintFormatter(x, y) {
-            return "x: " + x + " y: " + y;
-        }
-        
-        function defaultLabelFormatter(x) {
-            return ":: " + x + " ::";
-        }
-
         var canvas = null, overlay = null, eventHolder = null, 
             ctx = null, octx = null,
             target = target_,
@@ -1903,42 +1895,51 @@ BOTTOM_SIDE_BUFFER = 5;
         
         function showHintDiv(x, y, data) {
             var offset = $(overlay).offset();
-            var fragments = [];
-            var hintWrapper = $('<div class="hint-wrapper"></div>');
-            var table = $('<table style="font-size:smaller;white-space: nowrap;color:' + options.grid.color + '">' + fragments.join() + '</table>');
-            hintWrapper.appendTo(target);
-            
-            fragments.push('<tbody>');
-            fragments.push('<tr>');
-            
-            if (data.hints.showColorBox) {
-                fragments.push('<td class="legendColorBox"><div style="border:1px solid ' +
-                               options.legend.labelBoxBorderColor +
-                               ';padding:1px"><div style="width:14px;height:10px;background-color:' +
-                               data.color + '"></div></div></td>');
+            if ($('.hint-wrapper').length > 0 &&
+                $('.hint-wrapper:first').attr('name') == x + ":" + y) {
+                var hintDiv = $('div.plot-hint');
+                var hintBackground = $('div.hint-background');
             }
+            else {
+                cleanup();
+                var fragments = [];
+                var hintWrapper = $('<div class="hint-wrapper" name="' +
+                                    x + ':' + y + '"></div>');
+                hintWrapper.appendTo(target);
             
-            if (data.hints.showSeriesLabel && data.label) {
-                var label = data.hints.labelFormatter(data.label);
-                fragments.push('<td class="legendLabel" style="padding-left:4px">' + label + '</td>');
-            }
-            fragments.push('<td class="hintData" style="padding-left:4px"></td>');
-            fragments.push('</tr>');
-            fragments.push('</tbody>');
-            
-            hintDiv = $('<div class="plot-hint" style="z-index:4;position:absolute;top:0px;left:0px;display:none;"></div>').appendTo(hintWrapper);
-            hintDiv.append(table);
-            if (data.hints.backgroundOpacity != 0.0) {
-                var c = data.hints.backgroundColor;
-                if (c == null) {
-                    tmp = options.grid.backgroundColor ? options.grid.backgroundColor : extractColor(hintDiv);
-                    c = parseColor(tmp).adjust(null, null, null, 1).toString();
+                fragments.push('<tbody>');
+                fragments.push('<tr>');
+                if (data.hints.showColorBox) {
+                    fragments.push('<td class="legendColorBox"><div style="border:1px solid ' +
+                                   options.legend.labelBoxBorderColor +
+                                   ';padding:1px"><div style="width:14px;height:10px;background-color:' +
+                                   data.color + '"></div></div></td>');
                 }
-                hintBackground = $('<div class="hint-background" style="z-index:4;position:absolute;display:none;background-color:' + c + ';"> </div>').appendTo(hintWrapper).css('opacity', data.hints.backgroundOpacity);
-            }
             
-            var hintDataContainer = hintDiv.find('.hintData');
-            $(hintDataContainer).text(data.hints.hintFormatter( x, y ));
+                if (data.hints.showSeriesLabel && data.label) {
+                    var label = data.hints.labelFormatter(data.label);
+                    fragments.push('<td class="legendLabel" style="padding-left:4px">' + label + '</td>');
+                }
+                fragments.push('<td class="hintData" style="padding-left:4px"></td>');
+                fragments.push('</tr>');
+                fragments.push('</tbody>');
+            
+                hintDiv = $('<div class="plot-hint" style="z-index:5;position:absolute;top:0px;left:0px;display:none;"></div>').appendTo(hintWrapper);
+                var table = $('<table style="font-size:smaller;white-space: nowrap;color:' +
+                              options.grid.color + '">' + fragments.join('') + '</table>');
+                hintDiv.append(table);
+                if (data.hints.backgroundOpacity != 0.0) {
+                    var c = data.hints.backgroundColor;
+                    if (c == null) {
+                        tmp = options.grid.backgroundColor ? options.grid.backgroundColor : extractColor(hintDiv);
+                        c = parseColor(tmp).adjust(null, null, null, 1).toString();
+                    }
+                    hintBackground = $('<div class="hint-background" style="z-index:4;position:absolute;display:none;background-color:' + c + ';"> </div>').appendTo(hintWrapper).css('opacity', data.hints.backgroundOpacity);
+                }
+            
+                var hintDataContainer = hintDiv.find('.hintData');
+                $(hintDataContainer).html(data.hints.hintFormatter( x, y ));
+            }
 
             hintDiv.css({ left: lastMousePos.pageX - offset.left + 15,
                           top: lastMousePos.pageY - offset.top + 15 }).show();
@@ -1952,6 +1953,15 @@ BOTTOM_SIDE_BUFFER = 5;
         function cleanup() {
             $('.hint-wrapper').remove();
             draw();
+        }
+        
+        function defaultHintFormatter(x, y) {
+            return "<strong>x:</strong> " + x.toFixed(2) +
+                   " <strong>y:</strong> " + y.toFixed(2);
+        }
+        
+        function defaultLabelFormatter(label) {
+            return "<span style='font-size:1.2em;'>" + label + "</span>";
         }
     }
     
