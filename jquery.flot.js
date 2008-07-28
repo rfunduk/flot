@@ -147,7 +147,9 @@ BOTTOM_SIDE_BUFFER = 5;
         constructCanvas();
         setupGrid();
         draw();
-
+        // kill hints and highlighted points when the mouse leaves the graph
+        if (options.grid.hoverable) { $(target).mouseout(cleanup); }
+        
         function setData(d) {
             series = parseData(d);
 
