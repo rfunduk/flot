@@ -411,6 +411,7 @@ Customizing the data series
     hintFormatter: fn: or leave it alone to get the defalt
     backgroundColor: color or null (for auto-detect)
     backgroundOpacity: number
+    borderColor: color (including 'transparent')
   }
 
   colors: [ color1, color2, ... ]
