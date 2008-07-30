@@ -160,6 +160,7 @@ BOTTOM_SIDE_BUFFER = 5;
             // normalize the data given by the call to $.plot. If we're
             // going to be monitoring mousemove's then sort the data
             function sortData(x, y) {
+                if (!x || !y) return 0;
                 if (x[0] > y[0]) return 1;
                 else if( x[0] < y[0]) return -1;
                 else return 0;
@@ -374,8 +375,9 @@ BOTTOM_SIDE_BUFFER = 5;
             setTicks(yaxis, options.yaxis);
 
             setSpacing();
-            insertLabels();
+            insertTickLabels();
             insertLegend();
+            insertAxisLabels();
         }
         
         function setRange(axis, axisOptions) {
@@ -930,7 +932,7 @@ BOTTOM_SIDE_BUFFER = 5;
             }
         }
         
-        function insertLabels() {
+        function insertTickLabels() {
             target.find(".tickLabels").remove();
             
             var i, tick;
@@ -959,6 +961,45 @@ BOTTOM_SIDE_BUFFER = 5;
             html += '</div>';
             
             target.append(html);
+        }
+        
+        function insertAxisLabels() {
+            target.find('.axislabel').remove();
+            
+            if (options.xaxis.label) {
+                yLocation = plotOffset.top + plotHeight + xaxis.labelHeight + (xaxis.labelHeight * 0.25);
+                xLocation = plotOffset.left;
+                target.append("<div class='xaxis axislabel' style='color:" +
+                              options.grid.color + ";width:" + plotWidth +
+                              "px;text-align:center;position:absolute;top:" +
+                              yLocation + "px;left:" + xLocation + "px;'>" +
+                              options.xaxis.label + "</div>");
+            }
+            if (options.yaxis.label) {
+                var element;
+                if ($.browser.msie) {
+                    element = "<span class='yaxis axislabel' style='writing-mode: tb-rl;filter: flipV flipH;'>" + options.yaxis.label + "</span>";
+                }
+                else {
+                    // we'll use svg instead
+                    var element = document.createElement('object');
+                    element.setAttribute('type', 'image/svg+xml');
+                    console.log( $('.xaxis').height() );
+                    xAxisHeight = $('.xaxis:first').height();
+                    string = '<svg:svg baseProfile="full" height="' + plotHeight + '" width="' + xAxisHeight * 1.5 + '" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><svg:g><svg:text text-anchor="middle" style="fill:' + options.grid.color + '; stroke:none" x="-' + plotHeight / 2 + '" y="0" transform="rotate(-90,' + xAxisHeight + ',0)" font-size="' + $('.xaxis').css('font-size') + '">' + options.yaxis.label + '</svg:text></svg:g></svg:svg>';
+                    element.setAttribute('data', 'data:image/svg+xml,' + string);
+                }
+                
+                xLocation = -(plotOffset.left);
+                yLocation = plotOffset.top;
+                var yAxisLabel = $("<div class='yaxis axislabel' style='color:" +
+                                   options.grid.color + ";height:" + plotHeight +
+                                   "px;text-align:center;position:absolute;top:" +
+                                   yLocation + "px;left:" + xLocation + "px;'</div>");
+                target.append(yAxisLabel);
+            }
+            
+            target.find('.yaxis').append(element);
         }
 
         function drawSeries(series) {

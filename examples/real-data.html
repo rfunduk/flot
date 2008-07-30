@@ -83,8 +83,8 @@ $(function () {
 
         if (data.length > 0)
             $.plot($("#placeholder"), data, {
-                yaxis: { min: 0 },
-                xaxis: { tickDecimals: 0 }
+                yaxis: { min: 0, label: "Budget" },
+                xaxis: { tickDecimals: 0, label: "Year" }
             });
     }
 
