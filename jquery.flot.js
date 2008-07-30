@@ -170,7 +170,7 @@ BOTTOM_SIDE_BUFFER = 5;
                 var s;
                 if (d[i].data) {
                     s = {};
-                    if (options.sortData && options.grid.hoverable) {
+                    if (options.sortData) {
                         d[i].data.sort(sortData);
                     }
                     for (var v in d[i]) {
@@ -179,7 +179,7 @@ BOTTOM_SIDE_BUFFER = 5;
                 }
                 else {
                     s = { data: d[i] };
-                    if (options.sortData && options.grid.hoverable) {
+                    if (options.sortData) {
                         d[i].sort(sortData);
                     }
                 }
@@ -1597,13 +1597,19 @@ BOTTOM_SIDE_BUFFER = 5;
             for (var i = 0; i < series.length; ++i) {
                 var data = series[i].data;
 
-                var half = tHoz(data[(data.length/2).toFixed(0)][0]).toFixed(0);
-                if (mouseX < half) {
-                    start = 0;
-                    end = (data.length/2).toFixed(0) + 5;
+                if (options.sortData) {
+                    var half = tHoz(data[(data.length/2).toFixed(0)][0]).toFixed(0);
+                    if (mouseX < half) {
+                        start = 0;
+                        end = (data.length/2).toFixed(0) + 5;
+                    }
+                    else {
+                        start = (data.length/2).toFixed(0) - 5;
+                        end = data.length;
+                    }
                 }
                 else {
-                    start = (data.length/2).toFixed(0) - 5;
+                    start = 0;
                     end = data.length;
                 }
 
