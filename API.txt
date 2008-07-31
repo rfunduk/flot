@@ -154,6 +154,7 @@ Customizing the axes
 ====================
 
   xaxis, yaxis: {
+    label: null or string
     mode: null or "time"
     min: null or number
     max: null or number
@@ -171,6 +172,9 @@ Customizing the axes
 The two axes have the same kind of options. The "mode" option
 determines how the data is interpreted, the default of null means as
 decimal numbers. Use "time" for time series data, see the next section.
+
+The "label" option will set an axis label for the specified axis. The
+y-axis uses SVG for browsers that support it and alternate means otherwise.
 
 The options "min"/"max" are the precise minimum/maximum value on the
 scale. If you don't specify either of them, a value will automatically

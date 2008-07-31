@@ -3,8 +3,6 @@
  *
  * Released under the MIT license.
  */
-RIGHT_SIDE_BUFFER = 10;
-BOTTOM_SIDE_BUFFER = 10;
 
 (function($) {
     function Plot(target_, data_, options_) {
@@ -12,7 +10,7 @@ BOTTOM_SIDE_BUFFER = 10;
         //   [ series1, series2 ... ]
         // where series is either just the data as [ [x1, y1], [x2, y2], ... ]
         // or { data: [ [x1, y1], [x2, y2], ... ], label: "some label" }
-        
+
         var series = [];
         var options = {
             // the color theme used for graphs
@@ -85,6 +83,7 @@ BOTTOM_SIDE_BUFFER = 10;
                 showLines: 'both',
                 showBorder: true,
                 markers: [],
+                labelFontSize: 16, // default is 16px font size for axis labels
                 color: "#545454", // primary color used for outline and labels
                 backgroundColor: null, // null for transparent, else color
                 tickColor: "#dddddd", // color used for the ticks
@@ -116,7 +115,7 @@ BOTTOM_SIDE_BUFFER = 10;
             shadowSize: 4,
             sortData: true
         };
-        
+
         var canvas = null, overlay = null, eventHolder = null, 
             ctx = null, octx = null,
             target = target_,
@@ -128,7 +127,10 @@ BOTTOM_SIDE_BUFFER = 10;
             hintDiv = null, hintBackground = null,
             lastMarker = null,
             // dedicated to storing data for buggy standard compliance cases
-            workarounds = {};
+            workarounds = {},
+            // buffer constants
+            RIGHT_SIDE_BUFFER = 10,
+            BOTTOM_SIDE_BUFFER = 10;
         
         this.setData = setData;
         this.setupGrid = setupGrid;
@@ -790,6 +792,7 @@ BOTTOM_SIDE_BUFFER = 10;
 
             if (yaxis.labelWidth > 0 && options.xaxis.showLabels)
                 plotOffset.left += yaxis.labelWidth + options.grid.labelMargin;
+
             plotWidth = canvasWidth - plotOffset.left - plotOffset.right - RIGHT_SIDE_BUFFER;
 
             // set width for labels; to avoid measuring the widths of
@@ -818,7 +821,12 @@ BOTTOM_SIDE_BUFFER = 10;
             }
                 
             if (xaxis.labelHeight > 0 && options.yaxis.showLabels)
-                plotOffset.bottom += xaxis.labelHeight + options.grid.labelMargin + BOTTOM_SIDE_BUFFER;
+                plotOffset.bottom += xaxis.labelHeight + options.grid.labelMargin;
+                
+            // add a bit of extra buffer on the bottom of the graph to account
+            // for the axis label, if there is one
+            if (options.xaxis.label)
+                plotOffset.bottom += BOTTOM_SIDE_BUFFER;
             
             plotHeight = canvasHeight - plotOffset.bottom - BOTTOM_SIDE_BUFFER - plotOffset.top;
             hozScale = plotWidth / (xaxis.max - xaxis.min);
@@ -986,21 +994,20 @@ BOTTOM_SIDE_BUFFER = 10;
                     var element = document.createElement('object');
                     element.setAttribute('type', 'image/svg+xml');
                     xAxisHeight = $('#xaxislabel').height();
-                    fontSize = parseInt($('#xaxislabel').css('font-size'));
                     string = '<svg:svg baseProfile="full" height="' + plotHeight +
                              '" width="' + xAxisHeight * 1.5 +
                              '" xmlns:svg="http://www.w3.org/2000/svg" ' +
                              'xmlns="http://www.w3.org/2000/svg" xmlns:xlink=' +
                              '"http://www.w3.org/1999/xlink"><svg:g>';
                     string += '<svg:text text-anchor="middle" style="fill:#545454; ' +
-                              'stroke:none" x="' + fontSize + '" y="' + plotHeight / 2 + '" ' + 
-                              'transform="rotate(-90,' + fontSize + ',' + plotHeight / 2 +
-                              ')" font-size="' + fontSize + '">' +
+                              'stroke:none" x="' + options.grid.labelFontSize + '" y="' + plotHeight / 2 + '" ' + 
+                              'transform="rotate(-90,' + options.grid.labelFontSize + ',' + plotHeight / 2 +
+                              ')" font-size="' + options.grid.labelFontSize + '">' +
                               options.yaxis.label + '</svg:text></svg:g></svg:svg>';
                     element.setAttribute('data', 'data:image/svg+xml,' + string);
                 }
 
-                xLocation = plotOffset.left - (yaxis.labelWidth * 1.5) - fontSize;
+                xLocation = plotOffset.left - (yaxis.labelWidth * 1.5) - options.grid.labelFontSize;
                 yLocation = plotOffset.top;
                 var yAxisLabel = $("<div id='yaxislabel' style='color:" +
                                    options.grid.color + ";height:" + plotHeight +
