@@ -1,5 +1,5 @@
 /*
- * Flot v0.6.1
+ * Flot v0.7.0
  *
  * Released under the MIT license.
  */
