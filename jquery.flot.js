@@ -4,7 +4,7 @@
  * Released under the MIT license.
  */
 RIGHT_SIDE_BUFFER = 10;
-BOTTOM_SIDE_BUFFER = 5;
+BOTTOM_SIDE_BUFFER = 10;
 
 (function($) {
     function Plot(target_, data_, options_) {
@@ -29,6 +29,7 @@ BOTTOM_SIDE_BUFFER = 5;
                 backgroundOpacity: 0.85 // set to 0 to avoid background
             },
             xaxis: {
+                label: null,
                 showLabels: true,
                 mode: null, // null or "time"
                 min: null, // min. value to show, null means set automatically
@@ -47,6 +48,7 @@ BOTTOM_SIDE_BUFFER = 5;
                 timeformat: null // format string to use
             },
             yaxis: {
+                label: null,
                 showLabels: true,
                 autoscaleMargin: 0.02
             },
@@ -816,7 +818,7 @@ BOTTOM_SIDE_BUFFER = 5;
             }
                 
             if (xaxis.labelHeight > 0 && options.yaxis.showLabels)
-                plotOffset.bottom += xaxis.labelHeight + options.grid.labelMargin;
+                plotOffset.bottom += xaxis.labelHeight + options.grid.labelMargin + BOTTOM_SIDE_BUFFER;
             
             plotHeight = canvasHeight - plotOffset.bottom - BOTTOM_SIDE_BUFFER - plotOffset.top;
             hozScale = plotWidth / (xaxis.max - xaxis.min);
@@ -964,12 +966,11 @@ BOTTOM_SIDE_BUFFER = 5;
         }
         
         function insertAxisLabels() {
-            target.find('.axislabel').remove();
-            
             if (options.xaxis.label) {
-                yLocation = plotOffset.top + plotHeight + xaxis.labelHeight + (xaxis.labelHeight * 0.25);
+                yLocation = plotOffset.top + plotHeight + (xaxis.labelHeight * 1.5);
                 xLocation = plotOffset.left;
-                target.append("<div class='xaxis axislabel' style='color:" +
+                target.find('#xaxislabel').remove();
+                target.append("<div id='xaxislabel' style='color:" +
                               options.grid.color + ";width:" + plotWidth +
                               "px;text-align:center;position:absolute;top:" +
                               yLocation + "px;left:" + xLocation + "px;'>" +
@@ -984,22 +985,30 @@ BOTTOM_SIDE_BUFFER = 5;
                     // we'll use svg instead
                     var element = document.createElement('object');
                     element.setAttribute('type', 'image/svg+xml');
-                    console.log( $('.xaxis').height() );
-                    xAxisHeight = $('.xaxis:first').height();
-                    string = '<svg:svg baseProfile="full" height="' + plotHeight + '" width="' + xAxisHeight * 1.5 + '" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><svg:g><svg:text text-anchor="middle" style="fill:' + options.grid.color + '; stroke:none" x="-' + plotHeight / 2 + '" y="0" transform="rotate(-90,' + xAxisHeight + ',0)" font-size="' + $('.xaxis').css('font-size') + '">' + options.yaxis.label + '</svg:text></svg:g></svg:svg>';
+                    xAxisHeight = $('#xaxislabel').height();
+                    fontSize = parseInt($('#xaxislabel').css('font-size'));
+                    string = '<svg:svg baseProfile="full" height="' + plotHeight +
+                             '" width="' + xAxisHeight * 1.5 +
+                             '" xmlns:svg="http://www.w3.org/2000/svg" ' +
+                             'xmlns="http://www.w3.org/2000/svg" xmlns:xlink=' +
+                             '"http://www.w3.org/1999/xlink"><svg:g>';
+                    string += '<svg:text text-anchor="middle" style="fill:#545454; ' +
+                              'stroke:none" x="' + fontSize + '" y="' + plotHeight / 2 + '" ' + 
+                              'transform="rotate(-90,' + fontSize + ',' + plotHeight / 2 +
+                              ')" font-size="' + fontSize + '">' +
+                              options.yaxis.label + '</svg:text></svg:g></svg:svg>';
                     element.setAttribute('data', 'data:image/svg+xml,' + string);
                 }
-                
-                xLocation = -(plotOffset.left);
+
+                xLocation = plotOffset.left - (yaxis.labelWidth * 1.5) - fontSize;
                 yLocation = plotOffset.top;
-                var yAxisLabel = $("<div class='yaxis axislabel' style='color:" +
+                var yAxisLabel = $("<div id='yaxislabel' style='color:" +
                                    options.grid.color + ";height:" + plotHeight +
                                    "px;text-align:center;position:absolute;top:" +
                                    yLocation + "px;left:" + xLocation + "px;'</div>");
-                target.append(yAxisLabel);
+                yAxisLabel.append(element);
+                target.find('#yaxislabel').remove().end().append(yAxisLabel);
             }
-            
-            target.find('.yaxis').append(element);
         }
 
         function drawSeries(series) {
