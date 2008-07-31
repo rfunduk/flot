@@ -3,8 +3,6 @@
  *
  * Released under the MIT license.
  */
-RIGHT_SIDE_BUFFER = 10;
-BOTTOM_SIDE_BUFFER = 5;
 
 (function($) {
     function Plot(target_, data_, options_) {
@@ -12,7 +10,7 @@ BOTTOM_SIDE_BUFFER = 5;
         //   [ series1, series2 ... ]
         // where series is either just the data as [ [x1, y1], [x2, y2], ... ]
         // or { data: [ [x1, y1], [x2, y2], ... ], label: "some label" }
-        
+
         var series = [];
         var options = {
             // the color theme used for graphs
@@ -29,6 +27,7 @@ BOTTOM_SIDE_BUFFER = 5;
                 backgroundOpacity: 0.85 // set to 0 to avoid background
             },
             xaxis: {
+                label: null,
                 showLabels: true,
                 mode: null, // null or "time"
                 min: null, // min. value to show, null means set automatically
@@ -47,6 +46,7 @@ BOTTOM_SIDE_BUFFER = 5;
                 timeformat: null // format string to use
             },
             yaxis: {
+                label: null,
                 showLabels: true,
                 autoscaleMargin: 0.02
             },
@@ -83,6 +83,7 @@ BOTTOM_SIDE_BUFFER = 5;
                 showLines: 'both',
                 showBorder: true,
                 markers: [],
+                labelFontSize: 16, // default is 16px font size for axis labels
                 color: "#545454", // primary color used for outline and labels
                 backgroundColor: null, // null for transparent, else color
                 tickColor: "#dddddd", // color used for the ticks
@@ -114,7 +115,7 @@ BOTTOM_SIDE_BUFFER = 5;
             shadowSize: 4,
             sortData: true
         };
-        
+
         var canvas = null, overlay = null, eventHolder = null, 
             ctx = null, octx = null,
             target = target_,
@@ -126,7 +127,10 @@ BOTTOM_SIDE_BUFFER = 5;
             hintDiv = null, hintBackground = null,
             lastMarker = null,
             // dedicated to storing data for buggy standard compliance cases
-            workarounds = {};
+            workarounds = {},
+            // buffer constants
+            RIGHT_SIDE_BUFFER = 10,
+            BOTTOM_SIDE_BUFFER = 10;
         
         this.setData = setData;
         this.setupGrid = setupGrid;
@@ -160,6 +164,7 @@ BOTTOM_SIDE_BUFFER = 5;
             // normalize the data given by the call to $.plot. If we're
             // going to be monitoring mousemove's then sort the data
             function sortData(x, y) {
+                if (!x || !y) return 0;
                 if (x[0] > y[0]) return 1;
                 else if( x[0] < y[0]) return -1;
                 else return 0;
@@ -374,8 +379,9 @@ BOTTOM_SIDE_BUFFER = 5;
             setTicks(yaxis, options.yaxis);
 
             setSpacing();
-            insertLabels();
+            insertTickLabels();
             insertLegend();
+            insertAxisLabels();
         }
         
         function setRange(axis, axisOptions) {
@@ -786,6 +792,7 @@ BOTTOM_SIDE_BUFFER = 5;
 
             if (yaxis.labelWidth > 0 && options.xaxis.showLabels)
                 plotOffset.left += yaxis.labelWidth + options.grid.labelMargin;
+
             plotWidth = canvasWidth - plotOffset.left - plotOffset.right - RIGHT_SIDE_BUFFER;
 
             // set width for labels; to avoid measuring the widths of
@@ -815,6 +822,11 @@ BOTTOM_SIDE_BUFFER = 5;
                 
             if (xaxis.labelHeight > 0 && options.yaxis.showLabels)
                 plotOffset.bottom += xaxis.labelHeight + options.grid.labelMargin;
+                
+            // add a bit of extra buffer on the bottom of the graph to account
+            // for the axis label, if there is one
+            if (options.xaxis.label)
+                plotOffset.bottom += BOTTOM_SIDE_BUFFER;
             
             plotHeight = canvasHeight - plotOffset.bottom - BOTTOM_SIDE_BUFFER - plotOffset.top;
             hozScale = plotWidth / (xaxis.max - xaxis.min);
@@ -930,7 +942,7 @@ BOTTOM_SIDE_BUFFER = 5;
             }
         }
         
-        function insertLabels() {
+        function insertTickLabels() {
             target.find(".tickLabels").remove();
             
             var i, tick;
@@ -959,6 +971,51 @@ BOTTOM_SIDE_BUFFER = 5;
             html += '</div>';
             
             target.append(html);
+        }
+        
+        function insertAxisLabels() {
+            if (options.xaxis.label) {
+                yLocation = plotOffset.top + plotHeight + (xaxis.labelHeight * 1.5);
+                xLocation = plotOffset.left;
+                target.find('#xaxislabel').remove();
+                target.append("<div id='xaxislabel' style='color:" +
+                              options.grid.color + ";width:" + plotWidth +
+                              "px;text-align:center;position:absolute;top:" +
+                              yLocation + "px;left:" + xLocation + "px;'>" +
+                              options.xaxis.label + "</div>");
+            }
+            if (options.yaxis.label) {
+                var element;
+                if ($.browser.msie) {
+                    element = "<span class='yaxis axislabel' style='writing-mode: tb-rl;filter: flipV flipH;'>" + options.yaxis.label + "</span>";
+                }
+                else {
+                    // we'll use svg instead
+                    var element = document.createElement('object');
+                    element.setAttribute('type', 'image/svg+xml');
+                    xAxisHeight = $('#xaxislabel').height();
+                    string = '<svg:svg baseProfile="full" height="' + plotHeight +
+                             '" width="' + xAxisHeight * 1.5 +
+                             '" xmlns:svg="http://www.w3.org/2000/svg" ' +
+                             'xmlns="http://www.w3.org/2000/svg" xmlns:xlink=' +
+                             '"http://www.w3.org/1999/xlink"><svg:g>';
+                    string += '<svg:text text-anchor="middle" style="fill:#545454; ' +
+                              'stroke:none" x="' + options.grid.labelFontSize + '" y="' + plotHeight / 2 + '" ' + 
+                              'transform="rotate(-90,' + options.grid.labelFontSize + ',' + plotHeight / 2 +
+                              ')" font-size="' + options.grid.labelFontSize + '">' +
+                              options.yaxis.label + '</svg:text></svg:g></svg:svg>';
+                    element.setAttribute('data', 'data:image/svg+xml,' + string);
+                }
+
+                xLocation = plotOffset.left - (yaxis.labelWidth * 1.5) - options.grid.labelFontSize;
+                yLocation = plotOffset.top;
+                var yAxisLabel = $("<div id='yaxislabel' style='color:" +
+                                   options.grid.color + ";height:" + plotHeight +
+                                   "px;text-align:center;position:absolute;top:" +
+                                   yLocation + "px;left:" + xLocation + "px;'</div>");
+                yAxisLabel.append(element);
+                target.find('#yaxislabel').remove().end().append(yAxisLabel);
+            }
         }
 
         function drawSeries(series) {
