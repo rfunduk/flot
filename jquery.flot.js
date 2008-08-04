@@ -1576,10 +1576,15 @@
         }
 
         function insertLegend() {
-            target.find(".legend").remove();
+            // remove legends from the appropriate container
+            if (options.legend.container != null) {
+                options.legend.container.find('table.legend_table').remove();
+            }
+            else {
+                target.find('.legend').remove();
+            }
 
-            if (!options.legend.show)
-                return;
+            if (!options.legend.show) { return; }
             
             var fragments = [];
             var rowStarted = false;
@@ -1606,7 +1611,7 @@
                 fragments.push('</tr>');
             
             if (fragments.length > 0) {
-                var table = '<table style="font-size:smaller;color:' + options.grid.color + '">' + fragments.join("") + '</table>';
+                var table = '<table class="legend_table" style="font-size:smaller;color:' + options.grid.color + '">' + fragments.join("") + '</table>';
                 if (options.legend.container != null)
                     options.legend.container.append(table);
                 else {
@@ -1620,7 +1625,9 @@
                         pos += 'right:' + (m + plotOffset.right + RIGHT_SIDE_BUFFER) + 'px;';
                     else if (p.charAt(1) == "w")
                         pos += 'left:' + (m + plotOffset.left) + 'px;';
+                        
                     var legend = $('<div class="legend">' + table.replace('style="', 'style="position:absolute;' + pos +';') + '</div>').appendTo(target);
+                    
                     if (options.legend.backgroundOpacity != 0.0) {
                         // put in the transparent background
                         // separately to avoid blended labels and
