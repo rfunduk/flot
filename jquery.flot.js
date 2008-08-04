@@ -1450,8 +1450,11 @@
 
                     // determine the co-ordinates of the bar, account for negative bars having
                     // flipped top/bottom and draw/don't draw accordingly
-                    var left = x, right = x + barWidth, bottom = (y < 0 ? y : 0), top = (y < 0 ? 0 : y);
-                    if (right < xaxis.min || left > xaxis.max || top < yaxis.min || bottom > yaxis.max)
+                    var halfBar = barWidth / 2;
+                    var left = x - halfBar, right = x + halfBar,
+                        bottom = (y < 0 ? y : 0), top = (y < 0 ? 0 : y);
+                    if (right < xaxis.min || left > xaxis.max ||
+                        top < yaxis.min || bottom > yaxis.max)
                         continue;
 
                     // clip
