@@ -93,6 +93,7 @@
                 clickable: null,
                 hoverable: false,
                 mouseOverHighlight: null,
+                mouseOverHighlightRadius: null,
                 mouseOverFill: '#FFF',
                 mouseCatchingArea: 15,
                 coloredAreas: null, // array of { x1, y1, x2, y2 } or fn: plot area -> areas
@@ -1920,7 +1921,9 @@
                 var temp_series = {
                     shadowSize: options.shadowSize,
                     lines: { show: false },
-                    points: $.extend(true, options.points, { fillColor: fill }),
+                    points: $.extend(true, options.points,
+                                           { fillColor: fill,
+                                             radius: options.grid.mouseOverHighlightRadius }),
                     color: options.grid.mouseOverHighlight,
                     data: [[marker.x, marker.y]]
                 };
