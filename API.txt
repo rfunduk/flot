@@ -497,6 +497,11 @@ Customizing the grid
     coloredAreasColor: color
     borderWidth: number
     clickable: boolean
+    hoverable: boolean
+    mouseOverHighlight: color or null
+    mouseOverFill: color (default 'white')
+    mouseOverHighlightRadius: number or null
+    mouseCatchingArea: number (default 15)
   }
 
 The grid is the thing with the two axes and a number of ticks. "color"
@@ -588,9 +593,14 @@ some simple math to limit our traversal of the data series, making the hovering
 calculations faster at the expense of 'loading time' (the sorting isn't too
 large of a hit, it seems).
 
-The matching area is currently set to 15px, this should be an acceptable
-default. If you need to change it you can override this setting with
-options.grid.mouseCatchingArea = pixels.
+The matching area default is a 15px radius. If you need to change it you can
+override this setting with options.grid.mouseCatchingArea = pixels.
+
+If you're going to be highlighting hovered points and such then another useful
+option is 'mouseOverHighlightRadius' which determines the size of the 'fake'
+datapoint that gets drawn on the graph (think Google Analytics where hovered
+points 'pop' a little and grow as you hover over them). If null, it will use
+the default series size (3px).
 
 If you need to mark some specific value on the x- or y-axis, you can define
 markers that will be drawn on the grid.
@@ -611,6 +621,7 @@ Customizing the selection
 =========================
 
   selection: {
+    glob: boolean
     mode: null or "x" or "y" or "xy",
     color: color
   }
@@ -627,6 +638,9 @@ handler gets one extra parameter with the area selected, like this:
     placeholder.bind("selected", function(event, area) {
         // area selected is area.x1 to area.x2 and area.y1 to area.y2
     });
+    
+The 'glob' setting is only (currently) applicable when the mode is 'x'
+or 'xy'; it causes selections to snap to xaxis ticks.
 
 
 Plot Members
