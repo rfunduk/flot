@@ -94,6 +94,7 @@
                 hoverable: false,
                 mouseOverHighlight: null,
                 mouseOverFill: '#FFF',
+                mouseOverHighlightRadius: null,
                 mouseCatchingArea: 15,
                 coloredAreas: null, // array of { x1, y1, x2, y2 } or fn: plot area -> areas
                 coloredAreasColor: "#f4f4f4"
@@ -109,6 +110,7 @@
                 borderColor: "#BBB" // set to 'transparent' for none
             },
             selection: {
+                glob: false, // boolean for if we should snap to ticks on selection
                 mode: null, // one of null, "x", "y" or "xy"
                 color: "#e8cfac"
             },
@@ -1858,14 +1860,39 @@
         function setSelectionPos(pos, e) {
             var offset = $(overlay).offset();
             if (options.selection.mode == "y") {
-                if (pos == selection.first)
-                    pos.x = 0;
-                else
-                    pos.x = plotWidth;
+                pos.x = (pos == selection.first) ? 0 : plotWidth;
             }
             else {
                 pos.x = e.pageX - offset.left - plotOffset.left;
                 pos.x = Math.min(Math.max(0, pos.x), plotWidth);
+
+                if (options.selection.glob) {
+                    // find our current location in terms of the xaxis
+                    var x = xaxis.min + pos.x / hozScale;
+
+                    // determine if we're moving left or right on the xaxis
+                    if (selection.first.x - selection.second.x < 0 ||
+                        selection.first.x == -1) {
+                        // to the right
+                        idx = pos == selection.first ? -1 : 0
+                        for (var i = 0; i < xaxis.ticks.length; i++) {
+                            if (x <= xaxis.ticks[i].v) {
+                                pos.x = Math.floor((xaxis.ticks[i+idx].v - xaxis.min) * hozScale);
+                                break;
+                            }
+                        }
+                    }
+                    else {
+                        // to the left
+                        idx = pos == selection.first ? 1 : 0
+                        for (var i = xaxis.ticks.length - 1; i >= 0; i--) {
+                            if (x >= xaxis.ticks[i].v) {
+                                pos.x = Math.floor((xaxis.ticks[i+idx].v - xaxis.min) * hozScale);
+                                break;
+                            }
+                        }
+                    }
+                }
             }
 
             if (options.selection.mode == "x") {
@@ -1940,7 +1967,9 @@
                 var temp_series = {
                     shadowSize: options.shadowSize,
                     lines: { show: false },
-                    points: $.extend(true, options.points, { fillColor: fill }),
+                    points: $.extend(true, options.points,
+                                           { fillColor: fill,
+                                             radius: options.grid.mouseOverHighlightRadius }),
                     color: options.grid.mouseOverHighlight,
                     data: [[marker.x, marker.y]]
                 };
