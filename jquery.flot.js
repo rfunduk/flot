@@ -104,6 +104,9 @@
                 mode: null, // one of null, "x", "y" or "xy"
                 color: "#e8cfac"
             },
+            title: null,
+            titleFontSize: 20,
+            titleColor: 'black',
             shadowSize: 4,
             sortData: true
         };
@@ -121,7 +124,8 @@
             workarounds = {},
             // buffer constants
             RIGHT_SIDE_BUFFER = 10,
-            BOTTOM_SIDE_BUFFER = 10;
+            BOTTOM_SIDE_BUFFER = 10,
+            TOP_SIDE_BUFFER = 20;
         
         this.setData = setData;
         this.setupGrid = setupGrid;
@@ -786,6 +790,10 @@
 
             plotWidth = canvasWidth - plotOffset.left - plotOffset.right - RIGHT_SIDE_BUFFER;
 
+            if (options.title) {
+                plotOffset.top += TOP_SIDE_BUFFER;
+            }
+
             // set width for labels; to avoid measuring the widths of
             // the labels, we construct fixed-size boxes and put the
             // labels inside them, the fixed-size boxes are easy to
@@ -965,6 +973,18 @@
         }
         
         function insertAxisLabels() {
+            if (options.title) {
+                yLocation = plotOffset.top - options.titleFontSize * 1.25;
+                xLocation = plotOffset.left;
+                color = options.titleColor ? options.titleColor : options.grid.color;
+                titleDiv = $("<div id='graph_title' style='color:" + color +
+                             ";text-align:center;position:absolute;top:" + yLocation +
+                             "px;left:" + xLocation + "px;font-weight:bold;font-size:" +
+                             options.titleFontSize + "px;width:" + plotWidth + "px;'>" +
+                             options.title + "</div>");
+                target.append(titleDiv);
+            }
+            
             if (options.xaxis.label) {
                 yLocation = plotOffset.top + plotHeight + (xaxis.labelHeight * 1.5);
                 xLocation = plotOffset.left;
