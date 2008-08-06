@@ -1,5 +1,5 @@
 /*
- * Flot v0.7.0
+ * Flot v0.8.2
  *
  * Released under the MIT license.
  */
@@ -92,9 +92,9 @@
                 borderWidth: 2,
                 clickable: null,
                 hoverable: false,
-                mouseOverHighlight: null,
-                mouseOverFill: '#FFF',
-                mouseOverHighlightRadius: null,
+                hoverColor: null,
+                hoverFill: null,
+                hoverRadius: null,
                 mouseCatchingArea: 15,
                 coloredAreas: null, // array of { x1, y1, x2, y2 } or fn: plot area -> areas
                 coloredAreasColor: "#f4f4f4"
@@ -110,7 +110,7 @@
                 borderColor: "#BBB" // set to 'transparent' for none
             },
             selection: {
-                glob: false, // boolean for if we should snap to ticks on selection
+                snapToTicks: false, // boolean for if we should snap to ticks on selection
                 mode: null, // one of null, "x", "y" or "xy"
                 color: "#e8cfac"
             },
@@ -1846,7 +1846,7 @@
                 pos.x = e.pageX - offset.left - plotOffset.left;
                 pos.x = Math.min(Math.max(0, pos.x), plotWidth);
 
-                if (options.selection.glob) {
+                if (options.selection.snapToTicks) {
                     // find our current location in terms of the xaxis
                     var x = xaxis.min + pos.x / hozScale;
 
@@ -1939,18 +1939,18 @@
             else { lastMarker = marker; }
 
             // draw a marker on the graph over the point that the mouse is hovering over
-            if (marker && options.grid.mouseOverHighlight) {
-                var fill = options.grid.mouseOverHighlight == 'transparent' ?
-                             'transparent' :
-                             options.grid.mouseOverFill;
-                             
+            if (marker) {
+                var color = options.grid.hoverColor ? options.grid.hoverColor : marker.data.color;
+                var fill = options.grid.hoverFill ? options.grid.hoverFill : 'white';
+                var radius = options.grid.hoverRadius ? options.grid.hoverRadius : marker.data.points.radius;
+
                 var temp_series = {
                     shadowSize: options.shadowSize,
                     lines: { show: false },
                     points: $.extend(true, options.points,
                                            { fillColor: fill,
-                                             radius: options.grid.mouseOverHighlightRadius }),
-                    color: options.grid.mouseOverHighlight,
+                                             radius: radius }),
+                    color: color,
                     data: [[marker.x, marker.y]]
                 };
                 draw();
@@ -2042,7 +2042,7 @@
                 }
             
                 var hintDataContainer = hintDiv.find('.hintData');
-                $(hintDataContainer).html(data.hints.hintFormatter( x, y ));
+                $(hintDataContainer).html(data.hints.hintFormatter(x, y, data));
             }
 
             leftEdge = lastMousePos.pageX - offset.left + 15;

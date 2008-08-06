@@ -411,8 +411,8 @@ Customizing the data series
   hints: {
     showColorBox: boolean
     showSeriesLabel: boolean
-    labelFormatter: fn: or leave it alone to get the defalt
-    hintFormatter: fn: or leave it alone to get the defalt
+    labelFormatter: fn or null
+    hintFormatter: fn or null
     backgroundColor: color or null (for auto-detect)
     backgroundOpacity: number
     borderColor: color (including 'transparent')
@@ -467,22 +467,27 @@ against another city, etc).
 
 "hints" are essentially tooltips that get formatted according to the format
 function assigned to either an individual series or to all hints. The function
-should return a string. Here are the default formatters:
+should return a string. You could define a formatter like so:
 
-     function defaultHintFormatter(x, y) {
-         return "<strong>x:</strong> " + x.toFixed(2) +
-                " <strong>y:</strong> " + y.toFixed(2);
-     }
+    function myHintFormatter(x, y, data) {
+        return "<table><tr><td><strong>X</strong> =</td>" +
+               "<td>" + x + "</td></tr><tr>" +
+               "<td><strong>Y</strong> =</td>" +
+               "<td>" + y + "</td></tr></table>";
+    }
+    
+    // ... later
+    options.hints.hintFormatter = myHintFormatter;
+    
+You have access to the data which is the current series you're on, so you
+can use that however you like (get access to the data points, whether bars
+are enabled, what color the series is, and so on).
      
-     function defaultLabelFormatter(label) {
-         return "<span style='font-size:1.2em;'>" + label + "</span>";
-     }
-     
-'defaultHintFormatter' is the formatter for the actual datapoint.
-'defaultLabelFormatter' is the formatter for the series label. 'showColorBox'
-is whether the color of the series will appear in the tooltip like it does
-in the legend. 'showSeriesLabel' is whether the label of the series is inserted
-into the hint at all.
+'hintFormatter' is the formatter for the actual datapoint. 'labelFormatter'
+is the formatter for the series label. 'showColorBox' is whether the color
+of the series will appear in the tooltip like it does in the legend.
+'showSeriesLabel' is whether the label of the series is inserted into the
+hint at all.
 
 
 Customizing the grid
@@ -498,9 +503,9 @@ Customizing the grid
     borderWidth: number
     clickable: boolean
     hoverable: boolean
-    mouseOverHighlight: color or null
-    mouseOverFill: color (default 'white')
-    mouseOverHighlightRadius: number or null
+    hoverColor: color or null for the same color as the series
+    hoverFill: color (default 'white')
+    hoverRadius: number or null for the same as the series (default 3)
     mouseCatchingArea: number (default 15)
   }
 
@@ -597,10 +602,10 @@ The matching area default is a 15px radius. If you need to change it you can
 override this setting with options.grid.mouseCatchingArea = pixels.
 
 If you're going to be highlighting hovered points and such then another useful
-option is 'mouseOverHighlightRadius' which determines the size of the 'fake'
-datapoint that gets drawn on the graph (think Google Analytics where hovered
-points 'pop' a little and grow as you hover over them). If null, it will use
-the default series size (3px).
+option is 'hoverRadius' which determines the size of the 'fake' datapoint
+that gets drawn on the graph (think Google Analytics where hovered points
+'pop' a little and grow as you hover over them). If null, it will use the
+default series size (3px).
 
 If you need to mark some specific value on the x- or y-axis, you can define
 markers that will be drawn on the grid.
