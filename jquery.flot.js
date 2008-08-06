@@ -1,26 +1,20 @@
 /*
- * Flot v0.8.2
+ * Flot v1.0.0
  *
  * Released under the MIT license.
  */
 
 (function($) {
-    function Plot(target_, data_, options_) {
-        // data is on the form:
-        //   [ series1, series2 ... ]
-        // where series is either just the data as [ [x1, y1], [x2, y2], ... ]
-        // or { data: [ [x1, y1], [x2, y2], ... ], label: "some label" }
-
+    function Plot( target_, data_, options_ ) {
         var series = [];
         var options = {
-            // the color theme used for graphs
-            colors: ["#edc240", "#afd8f8", "#cb4b4b", "#4da74d", "#9440ed"],
+            colors: [ "#edc240", "#afd8f8", "#cb4b4b", "#4da74d", "#9440ed" ],
             legend: {
                 show: true,
                 noColumns: 1, // number of colums in legend table
                 labelFormatter: null, // fn: string -> string
                 labelBoxBorderColor: "#ccc", // border color for the little label boxes
-                container: null, // container (as jQuery object) to put legend in, null means default on top of graph
+                container: null, // jQuery container to place the legend in
                 position: "ne", // position of default legend container within plot
                 margin: 5, // distance from grid edge to default legend container within plot
                 backgroundColor: null, // null means auto-detect
@@ -76,10 +70,6 @@
                 markerWidth: 3
             },
             grid: {
-                // marker lines -> should be an array of objects of the form:
-                // [ { axis: 'x', color: '#888888', value: 1, width: 1 }, ... ]
-                // they will only be drawn if they fall within the current
-                // graph scale
                 showLines: 'both',
                 showBorder: true,
                 markers: [],
@@ -95,7 +85,7 @@
                 hoverColor: null,
                 hoverFill: null,
                 hoverRadius: null,
-                mouseCatchingArea: 15,
+                mouseCatchingArea: 15, // max radius around a datapoint for a hover/click to register
                 coloredAreas: null, // array of { x1, y1, x2, y2 } or fn: plot area -> areas
                 coloredAreasColor: "#f4f4f4"
             },
@@ -120,9 +110,8 @@
 
         var canvas = null, overlay = null, eventHolder = null, 
             ctx = null, octx = null,
-            target = target_,
-            xaxis = {}, yaxis = {},
-            plotOffset = { left: 0, right: 0, top: 0, bottom: 0},
+            target = target_, xaxis = {}, yaxis = {},
+            plotOffset = { left: 0, right: 0, top: 0, bottom: 0 },
             canvasWidth = 0, canvasHeight = 0,
             plotWidth = 0, plotHeight = 0,
             hozScale = 0, vertScale = 0,
