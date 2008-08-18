@@ -47,8 +47,8 @@ $(function () {
                 function labelFormatter(label) {
                      return "<span style='font-size:0.8em;'>" + label + "</span>";
                 },
-            hintFormatter: function hintFormatter(x, y) {
-                var datetime = new Date(x);
+            hintFormatter: function hintFormatter( datapoint ) {
+                var datetime = new Date( datapoint.x );
 
                 var hour = datetime.getHours();
                 var minute = datetime.getMinutes();
@@ -60,7 +60,7 @@ $(function () {
                 return "<table><tr><td><strong>Time:</strong></td><td>" +
                        datetime.toDateString() + "<br/>@" + time + "</td></tr>" +
                        "<tr><td><strong>Value:</strong></td><td>" +
-                       y.toFixed(2) + "</td></tr></table>";
+                       datapoint.y.toFixed(2) + "</td></tr></table>";
             }
         }
     };  

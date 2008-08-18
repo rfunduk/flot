@@ -23,7 +23,7 @@ $(function () {
     for (var i = 0; i < 14; i += 0.5)
         d1.push([i, Math.sin(i)]);
 
-    var d2 = [[0, 3], [5, 8], [8, 5], [10, 13]];
+    var d2 = [ [8, 5], [0, 3], [10, 13], [5, 8] ];
 
     var d3 = [];
     for (var i = 0; i < 14; i += 0.5)
@@ -37,11 +37,10 @@ $(function () {
     for (var i = 0; i < 14; i += 0.5)
         d5.push([i, Math.sqrt(i)]);
         
-        
     var d6 = [];
     for (var i = 0; i < 14; i += 0.5)
-        d6.push([i, Math.round(Math.sin(i)+5.5), (i%2+6)]);
-    d6.push([14,6,2]);
+        d6.push( { x: i, y: Math.round(Math.sin(i)+5.5), delta: (i%2+6) } );
+    d6.push( { x: 14, y: 6, delta: 2 } );
     
     $.plot($("#placeholder"), [
         {
@@ -62,8 +61,8 @@ $(function () {
         },
         {
             data: d5,
-            lines: { show: true },
-            points: { show: true }
+            lines: { show: false },
+            points: { show: true, radius: 7 }
         },
         {
             data: d6,
@@ -71,7 +70,7 @@ $(function () {
               show: true,
               markerWidth: 4,
               color: {
-                above: "red",
+                above: "black",
                 below: "transparent",
                 equal: "blue"
               }

@@ -19,19 +19,30 @@
 $(function () {
     var d1 = [];
     for (var i = 0; i < 14; i += 0.5)
-        d1.push([i, Math.sin(i)]);
+        d1.push( { x: i, y: Math.sin(i) } );
 
     var d2 = [];
     for (var i = 0; i < 14; i += 0.5)
-        d2.push([i, Math.cos(i)]);
+        d2.push( { x: i, y: Math.cos(i) } );
 
     plot = $.plot($("#placeholder"), [ { data: d1, label: "Yellow" },
                                        { data: d2, label: "Blue" } ], { 
-        hints: { show: true },
+        hints: {
+          show: true,
+          hintFormatter: function( datapoint ) {
+              hintStr = "";
+              for( var key in datapoint ) {
+                  if( key[0] == '_' ) { continue; } // skip internal members
+                  hintStr += "<strong>" + key + ":</strong> " +
+                             datapoint[key].toFixed(2) + "<br/>";
+              }
+              return hintStr;
+          }
+        },
         points: { show: true }, 
         lines: { show: true },
         legend: { position: 'sw' },
-        grid: { 
+        grid: {
           clickable: true,
           hoverable: true,
           hoverFill: '#444',

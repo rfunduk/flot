@@ -1,20 +1,21 @@
 /*
- * Flot v1.0.0
+ * Flot v0.8.2
  *
  * Released under the MIT license.
  */
 
-(function($) {
+( function( $ ) {
     function Plot( target_, data_, options_ ) {
         var series = [];
         var options = {
-            colors: [ "#edc240", "#afd8f8", "#cb4b4b", "#4da74d", "#9440ed" ],
+            // the color theme used for graphs
+            colors: ["#edc240", "#afd8f8", "#cb4b4b", "#4da74d", "#9440ed"],
             legend: {
                 show: true,
                 noColumns: 1, // number of colums in legend table
                 labelFormatter: null, // fn: string -> string
                 labelBoxBorderColor: "#ccc", // border color for the little label boxes
-                container: null, // jQuery container to place the legend in
+                container: null, // container (as jQuery object) to put legend in, null means default on top of graph
                 position: "ne", // position of default legend container within plot
                 margin: 5, // distance from grid edge to default legend container within plot
                 backgroundColor: null, // null means auto-detect
@@ -72,7 +73,7 @@
             grid: {
                 showLines: 'both',
                 showBorder: true,
-                markers: [],
+                markers: [], // see API.txt for details
                 labelFontSize: 16, // default is 16px font size for axis labels
                 color: "#545454", // primary color used for outline and labels
                 backgroundColor: null, // null for transparent, else color
@@ -85,7 +86,7 @@
                 hoverColor: null,
                 hoverFill: null,
                 hoverRadius: null,
-                mouseCatchingArea: 15, // max radius around a datapoint for a hover/click to register
+                mouseCatchingArea: 15,
                 coloredAreas: null, // array of { x1, y1, x2, y2 } or fn: plot area -> areas
                 coloredAreasColor: "#f4f4f4"
             },
@@ -104,17 +105,15 @@
                 mode: null, // one of null, "x", "y" or "xy"
                 color: "#e8cfac"
             },
-            title: null,
-            titleFontSize: 20,
-            titleColor: 'black',
             shadowSize: 4,
             sortData: true
         };
 
         var canvas = null, overlay = null, eventHolder = null, 
             ctx = null, octx = null,
-            target = target_, xaxis = {}, yaxis = {},
-            plotOffset = { left: 0, right: 0, top: 0, bottom: 0 },
+            target = target_,
+            xaxis = {}, yaxis = {},
+            plotOffset = { left: 0, right: 0, top: 0, bottom: 0},
             canvasWidth = 0, canvasHeight = 0,
             plotWidth = 0, plotHeight = 0,
             hozScale = 0, vertScale = 0,
@@ -124,8 +123,7 @@
             workarounds = {},
             // buffer constants
             RIGHT_SIDE_BUFFER = 10,
-            BOTTOM_SIDE_BUFFER = 10,
-            TOP_SIDE_BUFFER = 20;
+            BOTTOM_SIDE_BUFFER = 10;
         
         this.setData = setData;
         this.setupGrid = setupGrid;
@@ -134,68 +132,60 @@
         this.cleanup = cleanup;
         this.clearSelection = clearSelection;
         this.setSelection = setSelection;
-        this.getCanvas = function() { return canvas; };
-        this.getPlotOffset = function() { return plotOffset; };
-        this.getData = function() { return series; };
-        this.getAxes = function() { return { xaxis: xaxis, yaxis: yaxis }; };
+        this.getCanvas = function () { return canvas; };
+        this.getPlotOffset = function () { return plotOffset; };
+        this.getData = function () { return series; };
+        this.getAxes = function () { return { xaxis: xaxis, yaxis: yaxis }; };
         
         // initialize
-        parseOptions(options_);
-        setData(data_);
+        $.extend( true, options, options_ );
+        setData( data_ );
         constructCanvas();
         setupGrid();
         draw();
+        
         // kill hints and highlighted points when the mouse leaves the graph
-        if (options.grid.hoverable) { $(target).mouseout(cleanup); }
+        if( options.grid.hoverable ) $(target).mouseout( cleanup );
 
-        function setData(d) {
+        function setData( d ) {
             series = parseData(d);
-
             fillInSeriesOptions();
             processData();
         }
         
-        function parseData(d) {
-            // normalize the data given by the call to $.plot. If we're
-            // going to be monitoring mousemove's then sort the data
-            function sortData(x, y) {
-                if (!x || !y) return 0;
-                if (x[0] > y[0]) return 1;
-                else if( x[0] < y[0]) return -1;
-                else return 0;
+        // normalize the data given to the call to $.plot. If we're
+        // going to be monitoring mousemove's then sort the data
+        function parseData( d ) {
+            function sortData( a, b ) {
+                if( !a || !b )       return  0;
+                if( a.x > b.x )      return  1;
+                else if( a.x < b.x ) return -1;
+                else                 return  0;
             }
 
             var res = [];
-            for (var i = 0; i < d.length; ++i) {
-                var s;
-                if (d[i].data) {
-                    s = {};
-                    if (options.sortData) {
-                        d[i].data.sort(sortData);
-                    }
-                    for (var v in d[i]) {
-                        s[v] = d[i][v];
-                    }
+            for( var i = 0; i < d.length; ++i ) {
+                var s = {};
+                if( d[i].data ) {
+                    for( var v in d[i] ) s[v] = d[i][v];
                 }
                 else {
-                    s = { data: d[i] };
-                    if (options.sortData) {
-                        d[i].sort(sortData);
+                    s.data = d[i];
+                }
+                res.push( s );
+            }
+            
+            // normalize the old style [x,y] data format
+            for( var i in res ) {
+                for( var j in res[i].data ) {
+                    var datapoint = res[i].data[j];
+                    if( datapoint != null && datapoint.x == undefined ) {
+                        res[i].data[j] = { x: datapoint[0], y: datapoint[1] };
                     }
                 }
-                res.push(s);
+                if( options.sortData ) res[i].data.sort( sortData );
             }
             return res;
-        }
-        
-        function parseOptions(o) {
-            $.extend(true, options, o);
-
-            // backwards compatibility, to be removed in future
-            if (options.xaxis.noTicks && options.xaxis.ticks == null)
-                options.xaxis.ticks = options.xaxis.noTicks;
-            if (options.yaxis.noTicks && options.yaxis.ticks == null)
-                options.yaxis.ticks = options.yaxis.noTicks;
         }
 
         function fillInSeriesOptions() {
@@ -285,7 +275,7 @@
                     if (data[j] == null)
                         continue;
                     
-                    var x = data[j][0], y = data[j][1];
+                    var x = data[j].x, y = data[j].y;
 
                     // convert to number
                     if (x == null || y == null || isNaN(x = +x) || isNaN(y = +y)) {
@@ -790,10 +780,6 @@
 
             plotWidth = canvasWidth - plotOffset.left - plotOffset.right - RIGHT_SIDE_BUFFER;
 
-            if (options.title) {
-                plotOffset.top += TOP_SIDE_BUFFER;
-            }
-
             // set width for labels; to avoid measuring the widths of
             // the labels, we construct fixed-size boxes and put the
             // labels inside them, the fixed-size boxes are easy to
@@ -973,18 +959,6 @@
         }
         
         function insertAxisLabels() {
-            if (options.title) {
-                yLocation = plotOffset.top - options.titleFontSize * 1.25;
-                xLocation = plotOffset.left;
-                color = options.titleColor ? options.titleColor : options.grid.color;
-                titleDiv = $("<div id='graph_title' style='color:" + color +
-                             ";text-align:center;position:absolute;top:" + yLocation +
-                             "px;left:" + xLocation + "px;font-weight:bold;font-size:" +
-                             options.titleFontSize + "px;width:" + plotWidth + "px;'>" +
-                             options.title + "</div>");
-                target.append(titleDiv);
-            }
-            
             if (options.xaxis.label) {
                 yLocation = plotOffset.top + plotHeight + (xaxis.labelHeight * 1.5);
                 xLocation = plotOffset.left;
@@ -1052,8 +1026,8 @@
                     if (prev == null || cur == null)
                         continue;
                     
-                    var x1 = prev[0], y1 = prev[1],
-                        x2 = cur[0], y2 = cur[1];
+                    var x1 = prev.x, y1 = prev.y,
+                        x2 = cur.x, y2 = cur.y;
 
                     // clip with ymin
                     if (y1 <= y2 && y1 < yaxis.min) {
@@ -1145,8 +1119,8 @@
                     if (prev == null || cur == null)
                         continue;
                         
-                    var x1 = prev[0], y1 = prev[1],
-                        x2 = cur[0], y2 = cur[1];
+                    var x1 = prev.x, y1 = prev.y,
+                        x2 = cur.x, y2 = cur.y;
 
                     // clip x values
                     
@@ -1294,7 +1268,7 @@
                     if (data[i] == null)
                         continue;
                     
-                    var x = data[i][0], y = data[i][1];
+                    var x = data[i].x, y = data[i].y;
                     if (x < xaxis.min || x > xaxis.max || y < yaxis.min || y > yaxis.max)
                         continue;
                     
@@ -1311,7 +1285,7 @@
                     if (data[i] == null)
                         continue;
                     
-                    var x = data[i][0], y = data[i][1];
+                    var x = data[i].x, y = data[i].y;
                     if (x < xaxis.min || x > xaxis.max || y < yaxis.min || y > yaxis.max)
                         continue;
                     ctx.beginPath();
@@ -1349,9 +1323,9 @@
                     if (data[i] == null)
                         continue;
 
-                    var x = data[i][0];
-                    var y = data[i][1]; // the datapoint
-                    var d = data[i][2]; // the delta
+                    var x = data[i].x;
+                    var y = data[i].y; // the datapoint
+                    var d = data[i].delta; // the delta
                     if (x < xaxis.min || x > xaxis.max ||
                         y < yaxis.min || y > yaxis.max ||
                         d < yaxis.min || d > yaxis.max)
@@ -1370,9 +1344,9 @@
                     if (data[i] == null)
                         continue;
 
-                    var x = data[i][0];
-                    var y = data[i][1]; // the datapoint
-                    var d = data[i][2]; // the delta
+                    var x = data[i].x;
+                    var y = data[i].y; // the datapoint
+                    var d = data[i].delta; // the delta
                     if (x < xaxis.min || x > xaxis.max ||
                         y < yaxis.min || y > yaxis.max ||
                         d < yaxis.min || d > yaxis.max)
@@ -1408,9 +1382,9 @@
                     if (data[i] == null)
                         continue;
 
-                    var x = data[i][0];
-                    var y = data[i][1]; // the datapoint
-                    var d = data[i][2]; // the delta
+                    var x = data[i].x;
+                    var y = data[i].y; // the datapoint
+                    var d = data[i].delta; // the delta
                     if (x < xaxis.min || x > xaxis.max ||
                         y < yaxis.min || y > yaxis.max ||
                         d < yaxis.min || d > yaxis.max)
@@ -1456,7 +1430,7 @@
                     if (data[i] == null)
                         continue;
                     
-                    var x = data[i][0], y = data[i][1];
+                    var x = data[i].x, y = data[i].y;
                     var drawLeft = true, drawTop = true, drawRight = true;
 
                     // determine the co-ordinates of the bar, account for negative bars having
@@ -1676,7 +1650,7 @@
                 var data = series[i].data;
 
                 if (options.sortData) {
-                    var half = tHoz(data[(data.length/2).toFixed(0)][0]).toFixed(0);
+                    var half = tHoz(data[(data.length/2).toFixed(0)].x).toFixed(0);
                     if (mouseX < half) {
                         start = 0;
                         end = (data.length/2).toFixed(0) + 5;
@@ -1696,7 +1670,7 @@
 
                     // We have to calculate distances in pixels, not in data units, because
                     // the scale of the axes may be different
-                    var x = data[j][0], y = data[j][1];
+                    var x = data[j].x, y = data[j].y;
 
                     xDistance = Math.abs(tHoz(x)-mouseX);
                     if (xDistance > options.grid.mouseCatchingArea) continue;
@@ -1706,10 +1680,8 @@
 
                     sqrDistance = xDistance*xDistance + yDistance*yDistance;
                     if (sqrDistance < lowestDistance) {
-                        selectedItem = {
-                            x: x, y: y,
-                            data: series[i]
-                        };
+                        selectedItem = data[j];
+                        selectedItem._data = series[i];
                         lowestDistance = sqrDistance;
                     }
                 }
@@ -1740,10 +1712,8 @@
                 result.selected = findSelectedItem(result.raw.x, result.raw.y);
                 
                 // display the tooltip/hint if requested
-                if (!$.browser.msie && result.selected && result.selected.data.hints.show) {
-                    showHintDiv(result.selected.x,
-                                result.selected.y,
-                                result.selected.data);
+                if (!$.browser.msie && result.selected && result.selected._data.hints.show) {
+                    showHintDiv(result.selected);
                 }
                 
                 if (!result.selected) cleanup();
@@ -1949,9 +1919,9 @@
 
             // draw a marker on the graph over the point that the mouse is hovering over
             if (marker) {
-                var color = options.grid.hoverColor ? options.grid.hoverColor : marker.data.color;
+                var color = options.grid.hoverColor ? options.grid.hoverColor : marker._data.color;
                 var fill = options.grid.hoverFill ? options.grid.hoverFill : 'white';
-                var radius = options.grid.hoverRadius ? options.grid.hoverRadius : marker.data.points.radius;
+                var radius = options.grid.hoverRadius ? options.grid.hoverRadius : marker._data.points.radius;
 
                 var temp_series = {
                     shadowSize: options.shadowSize,
@@ -1960,7 +1930,7 @@
                                            { fillColor: fill,
                                              radius: radius }),
                     color: color,
-                    data: [[marker.x, marker.y]]
+                    data: [ {x:marker.x, y:marker.y} ]
                 };
                 draw();
                 drawSeriesPoints(temp_series);
@@ -2005,10 +1975,10 @@
                    Math.abs(selection.second.y - selection.first.y) >= minSize;
         }
         
-        function showHintDiv(x, y, data) {
+        function showHintDiv(selected) {
             var offset = $(overlay).offset();
             if ($('.hint-wrapper').length > 0 &&
-                $('.hint-wrapper:first').attr('name') == x + ":" + y) {
+                $('.hint-wrapper:first').attr('name') == selected.x + ":" + selected.y) {
                 var hintDiv = $('div.plot-hint');
                 var hintBackground = $('div.hint-background');
             }
@@ -2016,20 +1986,20 @@
                 cleanup();
                 var fragments = [];
                 var hintWrapper = $('<div class="hint-wrapper" name="' +
-                                    x + ':' + y + '"></div>');
+                                    selected.x + ':' + selected.y + '"></div>');
                 hintWrapper.appendTo(target);
             
                 fragments.push('<tbody>');
                 fragments.push('<tr>');
-                if (data.hints.showColorBox) {
+                if (selected._data.hints.showColorBox) {
                     fragments.push('<td class="legendColorBox"><div style="border:1px solid ' +
                                    options.legend.labelBoxBorderColor +
                                    ';padding:1px"><div style="width:14px;height:10px;background-color:' +
-                                   data.color + '"></div></div></td>');
+                                   selected._data.color + '"></div></div></td>');
                 }
             
-                if (data.hints.showSeriesLabel && data.label) {
-                    var label = data.hints.labelFormatter(data.label);
+                if (selected._data.hints.showSeriesLabel && selected._data.label) {
+                    var label = selected._data.hints.labelFormatter(selected._data.label);
                     fragments.push('<td class="legendLabel" style="padding: 0px 4px">' + label + '</td>');
                 }
                 fragments.push('<td class="hintData" style="padding-left: 4px;"></td>');
@@ -2041,17 +2011,17 @@
                 var table = $('<table style="font-size:smaller;white-space: nowrap;color:' +
                               options.grid.color + '">' + fragments.join('') + '</table>');
                 hintDiv.append(table);
-                if (data.hints.backgroundOpacity != 0.0) {
-                    var c = data.hints.backgroundColor;
+                if (selected._data.hints.backgroundOpacity != 0.0) {
+                    var c = selected._data.hints.backgroundColor;
                     if (c == null) {
                         tmp = options.grid.backgroundColor ? options.grid.backgroundColor : extractColor(hintDiv);
                         c = parseColor(tmp).adjust(null, null, null, 1).toString();
                     }
-                    hintBackground = $('<div class="hint-background" style="padding: 2px;z-index:4;position:absolute;display:none;background-color:' + c + ';"> </div>').appendTo(hintWrapper).css('opacity', data.hints.backgroundOpacity);
+                    hintBackground = $('<div class="hint-background" style="padding: 2px;z-index:4;position:absolute;display:none;background-color:' + c + ';"> </div>').appendTo(hintWrapper).css('opacity', selected._data.hints.backgroundOpacity);
                 }
             
                 var hintDataContainer = hintDiv.find('.hintData');
-                $(hintDataContainer).html(data.hints.hintFormatter(x, y, data));
+                $(hintDataContainer).html(selected._data.hints.hintFormatter(selected));
             }
 
             leftEdge = lastMousePos.pageX - offset.left + 15;
@@ -2071,9 +2041,13 @@
             draw();
         }
         
-        function defaultHintFormatter(x, y) {
-            return "<strong>x:</strong> " + x.toFixed(2) +
-                   "<br/><strong>y:</strong> " + y.toFixed(2);
+        function defaultHintFormatter(datapoint) {
+            hintStr = "";
+            for( var key in datapoint ) {
+                if( key[0] == '_' ) { continue; } // skip internal members
+                hintStr += "<strong>" + key + ":</strong> " + datapoint[key] + "<br/>";
+            }
+            return hintStr;
         }
         
         function defaultLabelFormatter(label) {
