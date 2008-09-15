@@ -195,45 +195,41 @@
             var neededColors = series.length;
             var usedColors = [];
             var assignedColors = [];
-            for (i = 0; i < series.length; ++i) {
+            for( i = 0; i < series.length; ++i ) {
                 var sc = series[i].color;
-                if (sc != null) {
+                if( sc != null ) {
                     --neededColors;
-                    if (typeof sc == "number")
-                        assignedColors.push(sc);
-                    else
-                        usedColors.push(parseColor(series[i].color));
+                    if( typeof sc == "number" ) { assignedColors.push( sc ); }
+                    else { usedColors.push( parseColor( series[i].color ) ); }
                 }
             }
             
             // we might need to generate more colors if higher indices
             // are assigned
-            for (i = 0; i < assignedColors.length; ++i) {
-                neededColors = Math.max(neededColors, assignedColors[i] + 1);
+            for( i = 0; i < assignedColors.length; ++i ) {
+                neededColors = Math.max( neededColors, assignedColors[i] + 1 );
             }
 
             // produce colors as needed
             var colors = [];
             var variation = 0;
             i = 0;
-            while (colors.length < neededColors) {
+            while( colors.length < neededColors ) {
                 var c;
-                if (options.colors.length == i) // check degenerate case
-                    c = new Color(100, 100, 100);
-                else
-                    c = parseColor(options.colors[i]);
+                if( options.colors.length == i ) { c = new Color( 100, 100, 100 ); }
+                else { c = parseColor( options.colors[i] ); }
 
                 // vary color if needed
                 var sign = variation % 2 == 1 ? -1 : 1;
-                var factor = 1 + sign * Math.ceil(variation / 2) * 0.2;
-                c.scale(factor, factor, factor);
+                var factor = 1 + sign * Math.ceil( variation / 2 ) * 0.2;
+                c.scale( factor, factor, factor );
 
                 // FIXME: if we're getting to close to something else,
                 // we should probably skip this one
-                colors.push(c);
+                colors.push( c );
                 
                 ++i;
-                if (i >= options.colors.length) {
+                if( i >= options.colors.length ) {
                     i = 0;
                     ++variation;
                 }
@@ -241,16 +237,17 @@
 
             // fill in the options
             var colori = 0, s;
-            for (i = 0; i < series.length; ++i) {
+            for( i = 0; i < series.length; ++i ) {
                 s = series[i];
 
                 // assign colors
-                if (s.color == null) {
+                if( s.color == null ) {
                     s.color = colors[colori].toString();
                     ++colori;
                 }
-                else if (typeof s.color == "number")
+                else if( typeof s.color == "number" ) {
                     s.color = colors[s.color].toString();
+				}
 
                 // copy the rest
                 s.lines =  $.extend(true, {}, options.lines,  s.lines);
@@ -269,41 +266,33 @@
             xaxis.datamin = yaxis.datamin = top_sentry;
             xaxis.datamax = yaxis.datamax = bottom_sentry;
 
-            for (var i = 0; i < series.length; ++i) {
+            for( var i = 0; i < series.length; ++i ) {
                 var data = series[i].data;
-                for (var j = 0; j < data.length; ++j) {
-                    if (data[j] == null)
-                        continue;
+                for( var j = 0; j < data.length; ++j ) {
+                    if( data[j] == null ) continue;
                     
                     var x = data[j].x, y = data[j].y;
 
                     // convert to number
-                    if (x == null || y == null || isNaN(x = +x) || isNaN(y = +y)) {
+                    if( x == null || y == null ||
+	                    isNaN( x = +x ) || isNaN( y = +y ) ) {
                         data[j] = null; // mark this point as invalid
                         continue;
                     }
 
-                    if (x < xaxis.datamin)
-                        xaxis.datamin = x;
-                    if (x > xaxis.datamax)
-                        xaxis.datamax = x;
-                    if (y < yaxis.datamin)
-                        yaxis.datamin = y;
-                    if (y > yaxis.datamax)
-                        yaxis.datamax = y;
+                    if( x < xaxis.datamin )      xaxis.datamin = x;
+                    if( x > xaxis.datamax )      xaxis.datamax = x;
+                    if( y < yaxis.datamin )      yaxis.datamin = y;
+                    if( y > yaxis.datamax )      yaxis.datamax = y;
                 }
             }
             
-            if (xaxis.datamin == top_sentry)
-                xaxis.datamin = 0;
-            if (yaxis.datamin == top_sentry)
-                yaxis.datamin = 0;
-            if (xaxis.datamax == bottom_sentry)
-                xaxis.datamax = 1;
-            if (yaxis.datamax == bottom_sentry)
-                yaxis.datamax = 1;
+            if( xaxis.datamin == top_sentry )           xaxis.datamin = 0;
+            if( yaxis.datamin == top_sentry )           yaxis.datamin = 0;
+            if( xaxis.datamax == bottom_sentry )        xaxis.datamax = 1;
+            if( yaxis.datamax == bottom_sentry )        yaxis.datamax = 1;
         }
-
+// XXX
         function constructCanvas() {
             canvasWidth = target.width();
             canvasHeight = target.height();
