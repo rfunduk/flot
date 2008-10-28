@@ -292,54 +292,44 @@
             if( xaxis.datamax == bottom_sentry )        xaxis.datamax = 1;
             if( yaxis.datamax == bottom_sentry )        yaxis.datamax = 1;
         }
-// XXX
+
         function constructCanvas() {
             canvasWidth = target.width();
             canvasHeight = target.height();
-            target.html(""); // clear target
-            target.css("position", "relative"); // for positioning labels and overlay
+            target.html( '' ).css( 'position', 'relative' );
 
-            if (canvasWidth <= 0 || canvasHeight <= 0)
+            if( canvasWidth <= 0 || canvasHeight <= 0 ) {
                 throw "Invalid dimensions for plot, width = " + canvasWidth + ", height = " + canvasHeight;
+            }
 
             // the canvas
-            canvas = $('<canvas width="' + canvasWidth + '" height="' + canvasHeight + '"></canvas>').appendTo(target).get(0);
-            if ($.browser.msie) // excanvas hack
-                canvas = window.G_vmlCanvasManager.initElement(canvas);
-            ctx = canvas.getContext("2d");
+            canvas = $('<canvas width="' + canvasWidth + '" height="' + canvasHeight + '"></canvas>').appendTo( target ).get( 0 );
+            if( $.browser.msie ) { canvas = window.G_vmlCanvasManager.initElement( canvas ); }
+            ctx = canvas.getContext( '2d' );
 
             // overlay canvas for interactive features
-            overlay = $('<canvas style="position:absolute;left:0px;top:0px;" width="' + canvasWidth + '" height="' + canvasHeight + '"></canvas>').appendTo(target).get(0);
-            if ($.browser.msie) // excanvas hack
-                overlay = window.G_vmlCanvasManager.initElement(overlay);
-            octx = overlay.getContext("2d");
+            overlay = $('<canvas style="position:absolute;left:0px;top:0px;" width="' + canvasWidth + '" height="' + canvasHeight + '"></canvas>').appendTo( target ).get( 0 );
+            if( $.browser.msie ) { overlay = window.G_vmlCanvasManager.initElement( overlay ); }
+            octx = overlay.getContext( '2d' );
 
             // we include the canvas in the event holder too, because IE 7
             // sometimes has trouble with the stacking order
-            eventHolder = $([overlay, canvas]);
+            eventHolder = $( [ overlay, canvas ] );
 
-            
             // bind events
-            if (options.selection.mode != null) {
-                eventHolder.mousedown(onMouseDown);
-                
-                // FIXME: temp. work-around until jQuery bug 1871 is fixed
-                eventHolder.each(function () {
-                    this.onmousemove = onMouseMove;
-                });
+            if( options.selection.mode != null ) {
+                eventHolder.mousedown( onMouseDown ).mousemove( onMouseMove );
             }
 
-            if (options.grid.hoverable) {
-                eventHolder.each(function () {
-                    this.onmousemove = onMouseMove;
-                });
+            if( options.grid.hoverable ) {			
+                eventHolder.mousemove( onMouseMove );
             }
 
-            if (options.grid.clickable) {
-                eventHolder.click(onClick);
+            if( options.grid.clickable ) {
+                eventHolder.click( onClick );
             }
         }
-
+// XXX
         function setupGrid() {
             // x axis
             setRange(xaxis, options.xaxis);
