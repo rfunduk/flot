@@ -1,66 +1,71 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html><head>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                      "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Flot Examples</title>
-    <link href="interacting_files/layout.css" rel="stylesheet" type="text/css">
+    <link href="layout.css" rel="stylesheet" type="text/css">
     <!--[if IE]><script language="javascript" type="text/javascript" src="../excanvas.pack.js"></script><![endif]-->
-    <script language="javascript" type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.2.6/jquery.min.js"></script>
-    <script language="javascript" type="text/javascript" src="../jquery.flot.js"></script>
- </head><body>
-    <h1>Flot Examples</h1>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.2.6/jquery.min.js"></script>
+    <script type="text/javascript" src="../jquery.flot.js"></script>
+    <script type="text/javascript">
+      $(document).ready( function () {
+        
+        // create some datasets
+        var d1 = [];
+        for (var i = 0; i < 14; i += 0.5)
+          d1.push( { x: i, y: Math.sin(i/8) +1 } );
 
-    <div id="placeholder" style="width: 600px; height: 300px;"></div>
+        var d2 = [];
+        for (var i = 0; i < 14; i += 0.5)
+          d2.push( { x: i, y: Math.sin(i/-3) } );
 
-    <p>Try hovering or clicking on the plot above. <span id="result"></span></p>
-
-<script id="source" language="javascript" type="text/javascript">
-$(function () {
-    var d1 = [];
-    for (var i = 0; i < 14; i += 0.5)
-        d1.push( { x: i, y: Math.sin(i) } );
-
-    var d2 = [];
-    for (var i = 0; i < 14; i += 0.5)
-        d2.push( { x: i, y: Math.cos(i) } );
-
-    plot = $.plot($("#placeholder"), [ { data: d1, label: "Yellow" },
-                                       { data: d2, label: "Blue" } ], { 
-        hints: {
-          show: true,
-          hintFormatter: function( datapoint ) {
-              hintStr = "";
-              for( var key in datapoint ) {
+        // plot the graph into '#placeholder'
+        plot = $.plot(
+          $("#placeholder"),
+          [ { data: d1, label: "Yellow" },
+            { data: d2, label: "Blue" } ],
+          { hints: {
+              show: true,
+              hintFormatter: function( datapoint ) {
+                hintStr = "";
+                for( var key in datapoint ) {
                   if( key[0] == '_' ) { continue; } // skip internal members
                   hintStr += "<strong>" + key + ":</strong> " +
                              datapoint[key].toFixed(2) + "<br/>";
-              }
-              return hintStr;
-          }
-        },
-        points: { show: true }, 
-        lines: { show: true },
-        legend: { position: 'sw' },
-        grid: {
-          clickable: true,
-          hoverable: true,
-          hoverFill: '#444',
-          hoverRadius: 5
-        }
-    });
+                }
+                return hintStr;
+              } },
+            points: { show: true }, 
+            lines:  { show: true },
+            legend: { position: 'sw' },
+            grid: {
+              clickable: true,
+              hoverable: true,
+              hoverFill: '#444',
+              hoverRadius: 5
+            }
+          } );
 
-    $("#placeholder").bind("plotclick", function (e, pos) {
-        if (!pos.selected) { return; }
-        plot.highlightSelected( pos.selected );
-        x = pos.selected.x.toFixed(2);
-        y = pos.selected.y.toFixed(2);
-        $("#result").text('You clicked on (' + x +  ', ' + y + ')');
-    });
+        // setup event handlers
+        $("#placeholder").bind( "plotclick", function( e, pos ) {
+          if( !pos.selected ) { return; }
+          plot.highlightSelected( pos.selected );
+          x = pos.selected.x.toFixed( 2 );
+          y = pos.selected.y.toFixed( 2 );
+          $("#result").text( 'You clicked on (' + x +  ', ' + y + ')' );
+        } );
 
-    $("#placeholder").bind("plotmousemove", function (e, pos) {
-        if (!pos.selected) { return; }
-        plot.highlightSelected( pos.selected );
-    });
-});
-</script>
-
- </body></html>
+        $("#placeholder").bind( "plotmousemove", function( e, pos ) {
+          if( !pos.selected ) { return; }
+          plot.highlightSelected( pos.selected );
+        } );
+      });
+    </script>
+  </head>
+  <body>
+    <h1>Flot Examples</h1>
+    <div id="placeholder" style="width: 600px; height: 300px;"></div>
+    <p>Try hovering or clicking on the plot above. <span id="result"></span></p>
+  </body>
+</html>
