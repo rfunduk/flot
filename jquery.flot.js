@@ -329,18 +329,18 @@
                 eventHolder.click( onClick );
             }
         }
-// XXX
+
         function setupGrid() {
             // x axis
-            setRange(xaxis, options.xaxis);
-            prepareTickGeneration(xaxis, options.xaxis);
-            setTicks(xaxis, options.xaxis);
+            setRange( xaxis, options.xaxis );
+            prepareTickGeneration( xaxis, options.xaxis );
+            setTicks( xaxis, options.xaxis );
             extendXRangeIfNeededByBar();
 
             // y axis
-            setRange(yaxis, options.yaxis);
-            prepareTickGeneration(yaxis, options.yaxis);
-            setTicks(yaxis, options.yaxis);
+            setRange( yaxis, options.yaxis );
+            prepareTickGeneration( yaxis, options.yaxis );
+            setTicks( yaxis, options.yaxis );
 
             setSpacing();
             insertTickLabels();
@@ -348,17 +348,15 @@
             insertAxisLabels();
         }
         
-        function setRange(axis, axisOptions) {
+        function setRange( axis, axisOptions ) {
             var min = axisOptions.min != null ? axisOptions.min : axis.datamin;
             var max = axisOptions.max != null ? axisOptions.max : axis.datamax;
 
-            if (max - min == 0.0) {
+            if( max - min == 0.0 ) {
                 // degenerate case
                 var widen;
-                if (max == 0.0)
-                    widen = 1.0;
-                else
-                    widen = 0.01;
+                if( max == 0.0 )    widen = 1.0;
+                else                widen = 0.01;
 
                 min -= widen;
                 max += widen;
@@ -366,18 +364,16 @@
             else {
                 // consider autoscaling
                 var margin = axisOptions.autoscaleMargin;
-                if (margin != null) {
-                    if (axisOptions.min == null) {
-                        min -= (max - min) * margin;
+                if( margin != null ) {
+                    if( axisOptions.min == null ) {
+                        min -= ( max - min ) * margin;
                         // make sure we don't go below zero if all values
                         // are positive
-                        if (min < 0 && axis.datamin >= 0)
-                            min = 0;
+                        if( min < 0 && axis.datamin >= 0 ) min = 0;
                     }
-                    if (axisOptions.max == null) {
-                        max += (max - min) * margin;
-                        if (max > 0 && axis.datamax <= 0)
-                            max = 0;
+                    if( axisOptions.max == null ) {
+                        max += ( max - min ) * margin;
+                        if( max > 0 && axis.datamax <= 0 ) max = 0;
                     }
                 }
             }
@@ -385,130 +381,136 @@
             axis.max = max;
         }
 
-        function prepareTickGeneration(axis, axisOptions) {
+        function prepareTickGeneration( axis, axisOptions ) {
             // estimate number of ticks
             var noTicks;
-            if (typeof axisOptions.ticks == "number" && axisOptions.ticks > 0)
+            if( typeof axisOptions.ticks == "number" && axisOptions.ticks > 0 ) {
                 noTicks = axisOptions.ticks;
-            else if (axis == xaxis)
+            }
+            else if( axis == xaxis ) {
                 noTicks = canvasWidth / 100;
-            else
+            }
+            else {
                 noTicks = canvasHeight / 60;
+            }
             
-            var delta = (axis.max - axis.min) / noTicks;
+            var delta = ( axis.max - axis.min ) / noTicks;
             var size, generator, unit, formatter, i, magn, norm;
 
-            if (axisOptions.mode == "time") {
+            if( axisOptions.mode == "time" ) {
                 // pretty handling of time
-                
-                function formatDate(d, fmt, monthNames) {
-                    var leftPad = function(n) {
-                        n = "" + n;
-                        return n.length == 1 ? "0" + n : n;
+
+                function formatDate( d, fmt, monthNames ) {
+                    var leftPad = function( n ) {
+                        n = '' + n;
+                        return n.length == 1 ? '0' + n : n;
                     };
                     
                     var r = [];
                     var escape = false;
-                    if (monthNames == null)
-                        monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                    for (var i = 0; i < fmt.length; ++i) {
-                        var c = fmt.charAt(i);
+                    if( monthNames == null ) {
+                        monthNames = [ "Jan", "Feb", "Mar", "Apr", "May",
+                                       "Jun", "Jul", "Aug", "Sep", "Oct",
+                                       "Nov", "Dec" ];
+                    }
+                    for( var i = 0; i < fmt.length; ++i ) {
+                        var c = fmt.charAt( i );
                         
-                        if (escape) {
+                        if( escape ) {
                             switch (c) {
                             case 'h': c = "" + d.getUTCHours(); break;
-                            case 'H': c = leftPad(d.getUTCHours()); break;
-                            case 'M': c = leftPad(d.getUTCMinutes()); break;
-                            case 'S': c = leftPad(d.getUTCSeconds()); break;
+                            case 'H': c = leftPad( d.getUTCHours() ); break;
+                            case 'M': c = leftPad( d.getUTCMinutes() ); break;
+                            case 'S': c = leftPad( d.getUTCSeconds() ); break;
                             case 'd': c = "" + d.getUTCDate(); break;
-                            case 'm': c = "" + (d.getUTCMonth() + 1); break;
+                            case 'm': c = "" + ( d.getUTCMonth() + 1 ); break;
                             case 'y': c = "" + d.getUTCFullYear(); break;
                             case 'b': c = "" + monthNames[d.getUTCMonth()]; break;
                             }
-                            r.push(c);
+                            r.push( c );
                             escape = false;
                         }
                         else {
-                            if (c == "%")
-                                escape = true;
-                            else
-                                r.push(c);
+                            if( c == "%" ) escape = true;
+                            else           r.push( c );
                         }
                     }
-                    return r.join("");
+                    return r.join( '' );
                 }
-                
-                    
+
                 // map of app. size of time units in milliseconds
                 var timeUnitSize = {
                     "second": 1000,
                     "minute": 60 * 1000,
-                    "hour": 60 * 60 * 1000,
-                    "day": 24 * 60 * 60 * 1000,
-                    "month": 30 * 24 * 60 * 60 * 1000,
-                    "year": 365.2425 * 24 * 60 * 60 * 1000
+                    "hour":   60 * 60 * 1000,
+                    "day":    24 * 60 * 60 * 1000,
+                    "month":  30 * 24 * 60 * 60 * 1000,
+                    "year":   365.2425 * 24 * 60 * 60 * 1000
                 };
-
 
                 // the allowed tick sizes, after 1 year we use
                 // an integer algorithm
                 var spec = [
-                    [1, "second"], [2, "second"], [5, "second"], [10, "second"],
-                    [30, "second"], 
-                    [1, "minute"], [2, "minute"], [5, "minute"], [10, "minute"],
-                    [30, "minute"], 
-                    [1, "hour"], [2, "hour"], [4, "hour"],
-                    [8, "hour"], [12, "hour"],
-                    [1, "day"], [2, "day"], [3, "day"],
-                    [0.25, "month"], [0.5, "month"], [1, "month"],
-                    [2, "month"], [3, "month"], [6, "month"],
-                    [1, "year"]
+                    [ 1, "second" ],    [ 2, "second" ],    [ 5, "second" ],
+                    [ 10, "second" ],   [ 30, "second" ],   [ 1, "minute" ],
+                    [ 2, "minute" ],    [ 5, "minute" ],    [ 10, "minute" ],
+                    [ 30, "minute" ],   [ 1, "hour" ],      [ 2, "hour" ],
+                    [ 4, "hour" ],      [ 8, "hour" ],      [ 12, "hour" ],
+                    [ 1, "day" ],       [ 2, "day" ],       [ 3, "day" ],
+                    [ 0.25, "month" ],  [ 0.5, "month" ],   [ 1, "month" ],
+                    [ 2, "month" ],     [ 3, "month" ],     [ 6, "month" ],
+                    [ 1, "year" ]
                 ];
 
                 var minSize = 0;
-                if (axisOptions.minTickSize != null) {
-                    if (typeof axisOptions.tickSize == "number")
-                        minSize = axisOptions.tickSize;
-                    else
-                        minSize = axisOptions.minTickSize[0] * timeUnitSize[axisOptions.minTickSize[1]];
+                if( axisOptions.minTickSize != null ) {
+                    minSize = typeof axisOptions.tickSize == 'number' ?
+                                  axisOptions.tickSize:
+                                  axisOptions.minTickSize[0] *
+                                    timeUnitSize[axisOptions.minTickSize[1]];
                 }
 
-                for (i = 0; i < spec.length - 1; ++i)
-                    if (delta < (spec[i][0] * timeUnitSize[spec[i][1]]
-                                 + spec[i + 1][0] * timeUnitSize[spec[i + 1][1]]) / 2
-                       && spec[i][0] * timeUnitSize[spec[i][1]] >= minSize)
+                for( i = 0; i < spec.length - 1; ++i ) {
+                    var d = spec[i][0] * timeUnitSize[spec[i][1]] +
+                            spec[i + 1][0] * timeUnitSize[spec[i + 1][1]];
+                    if( delta < d / 2 &&
+                        spec[i][0] * timeUnitSize[spec[i][1]] >= minSize ) {
                         break;
+                    }
+                }
+
                 size = spec[i][0];
                 unit = spec[i][1];
-                
+
                 // special-case the possibility of several years
-                if (unit == "year") {
-                    magn = Math.pow(10, Math.floor(Math.log(delta / timeUnitSize.year) / Math.LN10));
-                    norm = (delta / timeUnitSize.year) / magn;
-                    if (norm < 1.5)
-                        size = 1;
-                    else if (norm < 3)
-                        size = 2;
-                    else if (norm < 7.5)
-                        size = 5;
-                    else
-                        size = 10;
+                if( unit == "year" ) {
+                    magn = Math.pow( 10,
+                             Math.floor(
+                               Math.log( delta / timeUnitSize.year ) / Math.LN10
+                             )
+                           );
+                    norm = ( delta / timeUnitSize.year ) / magn;
+                    if( norm < 1.5 )      size = 1;
+                    else if( norm < 3 )   size = 2;
+                    else if( norm < 7.5 ) size = 5;
+                    else                  size = 10;
 
                     size *= magn;
                 }
 
-                if (axisOptions.tickSize) {
+                if( axisOptions.tickSize ) {
                     size = axisOptions.tickSize[0];
                     unit = axisOptions.tickSize[1];
                 }
-                
-                generator = function(axis) {
+
+                generator = function( axis ) {
                     var ticks = [],
-                        tickSize = axis.tickSize[0], unit = axis.tickSize[1],
-                        d = new Date(axis.min);
+                        tickSize = axis.tickSize[0],
+                        unit = axis.tickSize[1],
+                        d = new Date( axis.min );
                     
                     var step = tickSize * timeUnitSize[unit];
-
+//XXX
                     if (unit == "second")
                         d.setUTCSeconds(floorInBase(d.getUTCSeconds(), tickSize));
                     if (unit == "minute")
