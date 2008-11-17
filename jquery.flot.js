@@ -63,6 +63,7 @@
                 lineWidth: 2, // in pixels
                 barWidth: 1, // in units of the x axis
                 fill: true,
+                fillOpacity: 0.4,
                 fillColor: null
             },
             deltas: {
@@ -247,7 +248,7 @@
                 }
                 else if( typeof s.color == "number" ) {
                     s.color = colors[s.color].toString();
-				}
+                }
 
                 // copy the rest
                 s.lines =  $.extend(true, {}, options.lines,  s.lines);
@@ -275,7 +276,7 @@
 
                     // convert to number
                     if( x == null || y == null ||
-	                    isNaN( x = +x ) || isNaN( y = +y ) ) {
+                        isNaN( x = +x ) || isNaN( y = +y ) ) {
                         data[j] = null; // mark this point as invalid
                         continue;
                     }
@@ -321,7 +322,7 @@
                 eventHolder.mousedown( onMouseDown ).mousemove( onMouseMove );
             }
 
-            if( options.grid.hoverable ) {			
+            if( options.grid.hoverable ) {            
                 eventHolder.mousemove( onMouseMove );
             }
 
@@ -1502,18 +1503,18 @@
         }
 
         function setFillStyle(obj, seriesColor) {
-            var fill = obj.fill;
+            var fill = obj.fill,
+                opacity = obj.fillOpacity;
             if (fill) {
                 if (obj.fillColor)
                     ctx.fillStyle = obj.fillColor;
                 else {
                     var c = parseColor(seriesColor);
-                    c.a = typeof fill == "number" ? fill : 0.4;
+                    c.a = typeof fill == "number" ? fill : ( opacity ? opacity : 0.4 );
                     c.normalize();
                     ctx.fillStyle = c.toString();
                 }
             }
-            
         }
 
         function drawMarkers() {
