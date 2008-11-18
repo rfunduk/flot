@@ -151,7 +151,7 @@
         var internalSelection = false;
 
         // re-plot the chart after the selected event
-        $("#placeholder").bind( "selected", function( event, area ) {
+        $("#placeholder").bind( 'plotselected', function( event, area ) {
           // clamp the zooming to prevent eternal zoom
           if( area.x2 - area.x1 < 0.00001 ) area.x2 = area.x1 + 0.00001;
           if( area.y2 - area.y1 < 0.00001 ) area.y2 = area.y1 + 0.00001;
@@ -168,13 +168,13 @@
         } );
 
         // show a little colored on the hovered datapoint
-        $('#placeholder').bind( "plotmousemove", function( e, pos ) {
+        $('#placeholder').bind( 'plotmousemove', function( e, pos ) {
           if( !pos.selected ) { return; }
-          plot.highlightSelected( pos.selected );
+          plot.highlight( pos.selected );
         } );
 
         // Set the selection area on the plot to what was selected on the overview
-        $("#overview").bind( "selected", function( e, area ) {
+        $("#overview").bind( 'plotselected', function( e, area ) {
           if( internalSelection ) return;
           internalSelection = true;
           plot.setSelection( area );

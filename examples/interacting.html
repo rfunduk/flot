@@ -48,17 +48,17 @@
           } );
 
         // setup event handlers
-        $("#placeholder").bind( "plotclick", function( e, pos ) {
+        $("#placeholder").bind( 'plotclick', function( e, pos ) {
           if( !pos.selected ) { return; }
-          plot.highlightSelected( pos.selected );
+          plot.highlight( pos.selected );
           x = pos.selected.x.toFixed( 2 );
           y = pos.selected.y.toFixed( 2 );
           $("#result").text( 'You clicked on (' + x +  ', ' + y + ')' );
         } );
 
-        $("#placeholder").bind( "plotmousemove", function( e, pos ) {
+        $("#placeholder").bind( 'plotmousemove', function( e, pos ) {
           if( !pos.selected ) { return; }
-          plot.highlightSelected( pos.selected );
+          plot.highlight( pos.selected );
         } );
       });
     </script>

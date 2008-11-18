@@ -48,7 +48,7 @@
         $.each( datasets, function( key, val ) { val.color = i++; } );
 
         // insert checkboxes
-        var choiceContainer = $(document).append( '<p id="choices">Show:</p>' );
+        var choiceContainer = $('body').append( '<p id="choices">Show:</p>' );
         $.each( datasets, function( key, val ) {
           choiceContainer.append( '<br/><input type="checkbox" name="' + key +
                                   '" checked="checked" >' + val.label + '</input>' );
