@@ -28,13 +28,13 @@ The data is an array of data series:
   [ series1, series2, ... ]
 
 A series can either be raw data or an object with properties. The raw
-data format is an array of points*:
+data format should follow the format:
+
+  [ { x: x1, y: y1 }, { x: x2, y: y2 }, ... ]
+
+You can also use the original dataformat and it will be normalized for you:
 
   [ [x1, y1], [x2, y2], ... ]
-
-E.g.
-
-  [ [1, 3], [2, 14.01], [3.5, 3.14] ]
 
 Note that to simplify the internal logic in Flot both the x and y
 values must be numbers, even if specifying time series (see below for
@@ -90,13 +90,8 @@ override the default options for the plot for that data series.
 Here's a complete example of a simple data specification:
 
   [ { label: "Foo", data: [ [10, 1], [17, -14], [30, 5] ] },
-    { label: "Bar", data: [ [11, 13], [19, 11], [30, -7] ] } ]
+    { label: "Bar", data: [ { x: 11, y: 13 }, { x: 19, y: 11 }, { x: 30, y: -7 } ] } ]
 
-
-*: If the data series has 'deltas' enabled then you must not only
-   specify the x and y points of the data but also the delta to be used
-   for this data point, eg. [x,y,d] rather than [x,y] (see section
-   below on delta series'.
 
 Plot Options
 ------------
@@ -359,7 +354,8 @@ specifiers are supported
 You can customize the month names with the "monthNames" option. For
 instance, for Danish you might specify:
 
-  monthName: ["jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug", "sep", "okt", "nov", "dec"]
+  monthName: [ "jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug",
+               "sep", "okt", "nov", "dec"]
 
 If everything else fails, you can control the formatting by specifying
 a custom tick formatter function as usual. Here's a simple example
@@ -549,13 +545,13 @@ An example function might look like this:
 
 
 If you set "clickable" to true, the plot will listen for click events
-on the plot area and fire a "plotclick" event on the placeholder with
+on the plot area and fire a 'plotclick' event on the placeholder with
 an object { x: number, y: number } as parameter when one occurs. You can
 use it like this:
 
     plot = $.plot($("#placeholder"), [ d ], { grid: { clickable: true } });
 
-    $("#placeholder").bind("plotclick", function (e, result) {
+    $("#placeholder").bind('plotclick', function (e, result) {
         // result.selected.x and result.selected.y are the datapoint matched
         // and the raw click locations are in result.raw.x/y
     });
@@ -566,10 +562,10 @@ less continuously while your mouse travels. You can use it like this:
     plot = $.plot($('#placeholder'), [d], { grid: { hoverable: true } } );
     $('#placeholder').bind('plotmouseover', function(e, result) {
         // result.selected contains the matched point and result.raw
-        // contains the raw mouse co-ordinates, like plotclick
+        // contains the raw mouse co-ordinates, like click
     } );
     
-Both of these handlers can benefit from the new function 'highlightSelected'
+Both of these handlers can benefit from the new function 'highlight'
 which take a datapoint of the form { x: xval, y: yval } and draws 'fake'
 points on the graph at that location. To do this you must specify some options
 for how you want it displayed, eg:
@@ -578,7 +574,7 @@ for how you want it displayed, eg:
     options.grid.mouseOverFill = "red";
     
     // and then call
-    plot.highlightSelected( result.selected );
+    plot.highlight( result.selected );
     
 ... will cause highlighted points (when hovering or clicking) to be drawn
 with black borders and a red center. If you specify a mouseOverHighlight
@@ -587,7 +583,7 @@ points on the graph). Note that this also means that you could pass
 result.raw instead to draw a point 'in the middle of nowhere', or any other
 coordinates:
 
-    plot.highlightSelected({ x: result.selected.x, y: result.selected.y + 1 });
+    plot.highlight({ x: result.selected.x, y: result.selected.y + 1 });
 
 Keep in mind one major limitation of the hovering system. It can be _very_
 slow with lots of data. To curb this problem, upon the initial generation
@@ -636,11 +632,11 @@ You enable selection support by setting the mode to one of "x", "y" or
 similarly for "y" mode. For "xy", the selection becomes a rectangle
 where both ranges can be specified. "color" is color of the selection.
 
-When selection support is enabled, a "selected" event will be emitted
+When selection support is enabled, a 'plotselected' event will be emitted
 on the DOM element you passed into the plot function. The event
 handler gets one extra parameter with the area selected, like this:
 
-    placeholder.bind("selected", function(event, area) {
+    placeholder.bind('plotselected', function(event, area) {
         // area selected is area.x1 to area.x2 and area.y1 to area.y2
     });
     
@@ -667,9 +663,9 @@ members:
 
       setSelection({ x1: 0, x2: 10, y1: 40, y2: 60});
 
-    setSelection will trigger the "selected" event when called so you
+    setSelection will trigger the 'plotselected' event when called so you
     may have to do a bit of shortcircuiting to prevent an eternal loop
-    if you invoke the method inside the "selected" handler.
+    if you invoke the method inside the 'plotselected' handler.
 
   - getCanvas()
 

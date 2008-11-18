@@ -65,7 +65,7 @@ $(function () {
     // now connect the two
     var internalSelection = false;
     
-    $("#placeholder").bind("selected", function (event, area) {
+    $("#placeholder").bind('plotselected', function (event, area) {
         // clamp the zooming to prevent eternal zoom
         if (area.x2 - area.x1 < 0.00001)
             area.x2 = area.x1 + 0.00001;
@@ -85,7 +85,7 @@ $(function () {
         overview.setSelection(area);
         internalSelection = false;
     });
-    $("#overview").bind("selected", function (event, area) {
+    $("#overview").bind('plotselected', function (event, area) {
         if (internalSelection)
             return;
         internalSelection = true;

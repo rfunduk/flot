@@ -68,7 +68,7 @@ $(function () {
     // now connect the two
     var internalSelection = false;
     
-    $("#placeholder").bind("selected", function (event, area) {
+    $("#placeholder").bind('plotselected', function (event, area) {
         // do the zooming
         plot = $.plot($("#placeholder"), [d],
                       $.extend(true, {}, options, {
@@ -82,7 +82,7 @@ $(function () {
         internalSelection = false;
     });
     
-    $("#overview").bind("selected", function (event, area) {
+    $("#overview").bind('plotselected', function (event, area) {
         if (internalSelection)
             return;
         internalSelection = true;
